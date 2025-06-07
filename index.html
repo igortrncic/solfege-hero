@@ -277,9 +277,40 @@
             'G': { freq: 392.00, color: '#0000FF', name: 'Sol' },
             'A': { freq: 440.00, color: '#4B0082', name: 'La' },
             'B': { freq: 493.88, color: '#9400D3', name: 'Ti' },
-            'c': { freq: 523.25, color: '#FF0000', name: 'Do (high)' }
+            'c': { freq: 523.25, color: '#FF0000', name: 'Do (high)' },
+            'C#': { freq: 277.18, color: '#666666', name: 'C#/Db' },
+            'D#': { freq: 311.13, color: '#666666', name: 'D#/Eb' },
+            'F#': { freq: 369.99, color: '#666666', name: 'F#/Gb' },
+            'G#': { freq: 415.30, color: '#666666', name: 'G#/Ab' },
+            'A#': { freq: 466.16, color: '#666666', name: 'A#/Bb' }
         };
 const songs = [
+    { name: "Twinkle Twinkle", notes: [
+        {note: 'C', duration: 'quarter'}, {note: 'C', duration: 'quarter'},
+        {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'},
+        {note: 'A', duration: 'quarter'}, {note: 'A', duration: 'quarter'},
+        {note: 'G', duration: 'half'},
+        {note: 'F', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
+        {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'},
+        {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
+        {note: 'C', duration: 'half'}
+      ], tempo: 500
+    },
+    { name: "Mary Had a Little Lamb", notes: [
+        {note: 'E', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'},
+        {note: 'C', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
+        {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'},
+        {note: 'E', duration: 'half'},
+        {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
+        {note: 'D', duration: 'half'}, // Adjusted from Q Q H in previous prompt to just H for this correction
+        {note: 'E', duration: 'quarter'}, {note: 'G', duration: 'quarter'},
+        {note: 'G', duration: 'half'}
+      ], tempo: 400
+    },
+    { name: "Do-Re-Mi Scale", notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'c', 'c', 'B', 'A', 'G', 'F', 'E', 'D', 'C'], tempo: 450 },
+    { name: "Happy Birthday", notes: ['C', 'C', 'D', 'C', 'F', 'E', 'C', 'C', 'D', 'C', 'G', 'F'], tempo: 450 },
+    { name: "Old MacDonald", notes: ['G', 'G', 'G', 'D', 'E', 'E', 'D', 'B', 'B', 'A', 'A', 'G'], tempo: 400 },
+    { name: "Pop Goes the Weasel", notes: ['C', 'D', 'E', 'C', 'E', 'F', 'G', 'G', 'A', 'G', 'F', 'E', 'C', 'D', 'C'], tempo: 400 },
     {
         name: "Jingle Bells",
         notes: [
@@ -297,38 +328,8 @@ const songs = [
         notes: [
             {note: 'G', duration: 'dotted_quarter'}, {note: 'A', duration: 'eighth'}, {note: 'G', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
             {note: 'E', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'G', duration: 'half'},
-            {note: 'G', duration: 'dotted_quarter'}, {note: 'A', duration: 'eighth'}, {note: 'G', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
+            {note: 'D', duration: 'dotted_quarter'}, {note: 'E', duration: 'eighth'}, {note: 'F', duration: 'quarter'},
             {note: 'E', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'G', duration: 'half'}
-        ],
-        tempo: 400
-    },
-    {
-        name: "Mary Had a Little Lamb",
-        notes: [
-            {note: 'E', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'}, {note: 'C', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
-            {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'half'},
-            {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'half'},
-            {note: 'E', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'half'}
-        ],
-        tempo: 400
-    },
-    {
-        name: "Old MacDonald",
-        notes: [
-            {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
-            {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'D', duration: 'half'},
-            {note: 'B', duration: 'quarter'}, {note: 'B', duration: 'quarter'}, {note: 'A', duration: 'quarter'}, {note: 'A', duration: 'quarter'},
-            {note: 'G', duration: 'half'}
-        ],
-        tempo: 400
-    },
-    {
-        name: "Pop Goes the Weasel",
-        notes: [
-            {note: 'C', duration: 'eighth'}, {note: 'D', duration: 'eighth'}, {note: 'E', duration: 'quarter'}, {note: 'C', duration: 'quarter'},
-            {note: 'E', duration: 'eighth'}, {note: 'F', duration: 'eighth'}, {note: 'G', duration: 'half'},
-            {note: 'G', duration: 'eighth'}, {note: 'A', duration: 'eighth'}, {note: 'G', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
-            {note: 'E', duration: 'eighth'}, {note: 'C', duration: 'eighth'}, {note: 'D', duration: 'quarter'}, {note: 'C', duration: 'half'}
         ],
         tempo: 400
     },
@@ -347,14 +348,17 @@ const songs = [
         tempo: 420
     },
     {
-        name: "Twinkle Twinkle",
-        notes: [
-            {note: 'C', duration: 'quarter'}, {note: 'C', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'},
-            {note: 'A', duration: 'quarter'}, {note: 'A', duration: 'quarter'}, {note: 'G', duration: 'half'},
-            {note: 'F', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'},
-            {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'}, {note: 'C', duration: 'half'}
-        ],
-        tempo: 500
+      name: "Imperial March (Darth Vader Theme)",
+      notes: [
+        { note: 'G',  duration: 'quarter' }, { note: 'G',  duration: 'quarter' }, { note: 'G',  duration: 'quarter' },
+        { note: 'D#', duration: 'quarter' }, { note: 'A#', duration: 'quarter' }, { note: 'G',  duration: 'half'   },
+
+        { note: 'D#', duration: 'quarter' }, { note: 'A#', duration: 'quarter' }, { note: 'G',  duration: 'half'   },
+
+        { note: 'D',  duration: 'quarter' }, { note: 'D',  duration: 'quarter' }, { note: 'D',  duration: 'quarter' },
+        { note: 'D#', duration: 'quarter' }, { note: 'A#', duration: 'quarter' }, { note: 'G',  duration: 'half'   }
+      ],
+      tempo: 500
     }
 ];
         let gameState = { started: false, level: 0, score: 0, currentSong: null, currentNoteIndex: 0, noteSequence: [], levelComplete: false, lastCorrectNote: null };
@@ -679,7 +683,7 @@ const songs = [
 
         function setCanvasSize() {
             // Calculate minimum width needed for all blocks
-            const minWidthForBlocks = (8 * 80) + (7 * 40) + 40; // 8 blocks, 7 gaps, plus margins = 960px
+            const minWidthForBlocks = (7 * 70) + (5 * 50) + (1 * 70) + (12 * 10) + 40; // 7 naturals (C-B), 5 chromatics, 1 high 'c', 12 gaps, plus 40px for side margins
             const aspectRatio = 800 / 600;
             const availableWidth = Math.max(minWidthForBlocks, window.innerWidth * 0.95);
             const availableHeight = window.innerHeight * 0.65;
@@ -772,38 +776,58 @@ const songs = [
             const groundY = canvas.height - 50;
             platforms.push({ x: 0, y: groundY, width: canvas.width, height: 50 });
 
-            const blockYPosition = canvas.height - player.height - 180; // Blocks raised higher
+            const naturalBlockWidth = 70;
+            const chromaticBlockWidth = 50;
+            const blockHeight = player.height; // All blocks same height for landing
+            const blockYPosition = canvas.height - player.height - 180; // All blocks same Y for landing
+            const desiredGap = 10;
+            const allNoteKeysInOrder = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'c'];
 
-            const notePlatformWidth = Math.min(850, canvas.width * 0.95);
-            const notePlatformX = (canvas.width - notePlatformWidth) / 2;
+            let totalRequiredWidth = 0;
+            const blockWidths = [];
 
-            const allNoteKeys = Object.keys(notes);
-            const blockCount = allNoteKeys.length;
-            const blockWidth = 80; // Fixed width - no longer responsive
-            const totalBlockActualWidth = blockCount * blockWidth;
-            const desiredGap = 40; // Fixed spacing
-            const totalDesiredGapWidth = (blockCount - 1) * desiredGap;
-            const totalRequiredWidth = totalBlockActualWidth + totalDesiredGapWidth;
+            allNoteKeysInOrder.forEach(noteKey => {
+                let currentBlockWidth;
+                if (noteKey.includes('#')) { // Check if it's a sharp/flat key (chromatic)
+                    currentBlockWidth = chromaticBlockWidth;
+                } else {
+                    currentBlockWidth = naturalBlockWidth;
+                }
+                blockWidths.push(currentBlockWidth);
+                totalRequiredWidth += currentBlockWidth;
+            });
 
-            let startX; let actualBlockSpacing;
+            totalRequiredWidth += (allNoteKeysInOrder.length - 1) * desiredGap;
 
-            // Always use fixed spacing - center the blocks if there's extra space
-            actualBlockSpacing = desiredGap;
-            startX = (canvas.width - totalRequiredWidth) / 2;
+            let startX = (canvas.width - totalRequiredWidth) / 2;
 
-            // Ensure blocks don't go off screen on very small displays
+            // Ensure blocks don't go off screen on very small displays, adjust startX if necessary
             if (startX < 10) {
                 startX = 10;
             }
 
-            allNoteKeys.forEach((noteKey, index) => {
+            let currentX = startX;
+
+            allNoteKeysInOrder.forEach((noteKey, index) => {
+                const noteInfo = notes[noteKey];
+                if (!noteInfo) {
+                    console.error("Error: Note info not found for key: " + noteKey);
+                    return;
+                }
+
+                const currentBlockWidth = blockWidths[index];
+
                 blocks.push({
-                    x: startX + index * (blockWidth + actualBlockSpacing),
+                    x: currentX,
                     y: blockYPosition,
-                    width: blockWidth, height: player.height,
-                    note: noteKey, color: notes[noteKey].color,
-                    hit: false, lastHit: 0
+                    width: currentBlockWidth,
+                    height: blockHeight,
+                    note: noteKey,
+                    color: noteInfo.color,
+                    hit: false,
+                    lastHit: 0
                 });
+                currentX += currentBlockWidth + desiredGap;
             });
         }
 
