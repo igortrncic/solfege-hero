@@ -219,12 +219,14 @@
     <h1>🎵 Solfege Hero 🎵</h1>
 
     <div id="gameContainer">
+        <button id="melodyReminderBtn" style="position: absolute; top: 5px; right: 5px; z-index: 20; padding: 8px 12px; background-color: #FFA500; /* Orange */">Repeat Hint</button>
         <canvas id="gameCanvas"></canvas>
         <div id="ui">
             <div>Score: <span id="score">0</span></div>
             <div>Level: <span id="level">1</span></div>
             <div>Song: <span id="songName">-</span></div>
             <div id="progress" style="margin-top: 5px;">Progress: <span id="progressText">0/0</span></div>
+            <div id="currentSongNotes" style="margin-top: 5px; font-size: clamp(10px, 2.5vw, 14px); color: #FFFF00; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">Notes: <span>-</span></div>
         </div>
     </div>
 
@@ -724,8 +726,38 @@ const songs = [
         document.getElementById('restartGameBtn').addEventListener('click',restartGame);
         closeInstructionsBtn.addEventListener('click',hideInstructions);
 
+        const melodyReminderBtn = document.getElementById('melodyReminderBtn');
+        melodyReminderBtn.addEventListener('click', playMelodyReminder);
+
         function hideInstructions(){clearTimeout(instructionsTimeout);instructionsPanel.classList.add('hidden')}
         function showInstructions(){instructionsPanel.classList.remove('hidden');clearTimeout(instructionsTimeout);instructionsTimeout=setTimeout(hideInstructions,12000)}
+
+        async function playMelodyReminder() {
+            if (!gameState.started || !gameState.currentSong || gameState.levelComplete) return;
+            if (audioContext.state === 'suspended') await audioContext.resume();
+
+            melodyReminderBtn.disabled = true;
+            // Potentially disable other game interaction buttons here
+
+            const notesToPlay = gameState.noteSequence.slice(gameState.currentNoteIndex);
+
+            for (let i = 0; i < notesToPlay.length; i++) {
+                const noteObj = notesToPlay[i];
+                const noteName = noteObj.note;
+                const durationName = noteObj.duration;
+                let multiplier = durationMultipliers[durationName] || 1;
+                const noteDurationMs = gameState.currentSong.tempo * multiplier;
+
+                playNote(noteName, noteDurationMs * 0.8); // Play note slightly shorter for clarity
+
+                await new Promise(resolve => setTimeout(resolve, noteDurationMs));
+
+                if (!gameState.started) break;
+            }
+
+            melodyReminderBtn.disabled = false;
+            // Re-enable other game interaction buttons if they were disabled
+        }
 
         function playNote(nk,d=200){if(!notes[nk])return;const o=audioContext.createOscillator(),g=audioContext.createGain();o.connect(g);g.connect(audioContext.destination);o.frequency.value=notes[nk].freq;o.type='sine';g.gain.setValueAtTime(.2,audioContext.currentTime);g.gain.exponentialRampToValueAtTime(.01,audioContext.currentTime+d/1000);o.start(audioContext.currentTime);o.stop(audioContext.currentTime+d/1000)}
 
@@ -834,12 +866,36 @@ const songs = [
             player.x=50;player.y=canvas.height-player.height-50;player.vx=0;player.vy=0;
             blocks=[];platforms=[];particles.length=0;updateUI();await startGame();
         }
+
+        function updateDisplayedNotes() {
+            const notesDisplayElement = document.getElementById('currentSongNotes').querySelector('span');
+            if (!gameState.currentSong) {
+                notesDisplayElement.innerHTML = '-';
+                return;
+            }
+
+            let notesHtml = gameState.noteSequence.map((noteObj, index) => {
+                let noteText = noteObj.note;
+                if (index === gameState.currentNoteIndex && !gameState.levelComplete) {
+                    return `<strong style="color: #FF6B6B; font-size: 1.1em;">${noteText}</strong>`; // Highlight current note
+                }
+                return noteText;
+            }).join(' - ');
+
+            if (gameState.levelComplete) {
+                 notesHtml = gameState.noteSequence.map(noteObj => noteObj.note).join(' - ') + " - ✔️";
+            }
+
+            notesDisplayElement.innerHTML = notesHtml;
+        }
+
         function updateUI(){
             document.getElementById('score').textContent=gameState.score;document.getElementById('level').textContent=gameState.level;
             document.getElementById('songName').textContent=gameState.currentSong?gameState.currentSong.name:"-";
             const p=gameState.currentSong?gameState.currentNoteIndex+'/'+gameState.noteSequence.length:"0/0";
             document.getElementById('progressText').textContent=p;
             if(gameState.currentSong&&gameState.currentNoteIndex>=gameState.noteSequence.length){document.getElementById('progressText').textContent='Complete!'}
+            updateDisplayedNotes(); // Add this line
         }
 
         function checkCollision(r1,r2){return r1.x<r2.x+r2.width&&r1.x+r1.width>r2.x&&r1.y<r2.y+r2.height&&r1.y+r1.height>r2.y}
@@ -872,10 +928,10 @@ const songs = [
                     if (player.vy >= 0 && prevY + player.height <= block.y + 1) { // Landing on block
                         player.y = block.y - player.height; player.vy = 0; player.grounded = true;
                         playNote(block.note, 300); block.lastHit = Date.now();
-                        if (gameState.currentNoteIndex < gameState.noteSequence.length && block.note === gameState.noteSequence[gameState.currentNoteIndex]) {
+                        if (gameState.currentNoteIndex < gameState.noteSequence.length && block.note === gameState.noteSequence[gameState.currentNoteIndex].note) {
                             gameState.score += 100; gameState.currentNoteIndex++;
                             gameState.lastCorrectNote = block.note; // Track last correct note
-                            createNoteHitEffect(block.x + block.width/2, block.y, block.color);
+                            createNoteHitEffect(block.x + block.width/2, block.y + block.height/2, block.color);
                             if (gameState.currentNoteIndex >= gameState.noteSequence.length) { gameState.levelComplete = true; triggerFireworksShow(); setTimeout(nextLevel, 4000); }
                         } else if (gameState.currentNoteIndex < gameState.noteSequence.length) { gameState.score = Math.max(0, gameState.score - 20); }
                         updateUI();
@@ -883,10 +939,10 @@ const songs = [
                     else if (player.vy < 0 && prevY >= block.y + block.height -1 ) { // Hit from below
                         player.y = block.y + block.height; player.vy = 2;
                         playNote(block.note, 300); block.lastHit = Date.now();
-                        if (gameState.currentNoteIndex < gameState.noteSequence.length && block.note === gameState.noteSequence[gameState.currentNoteIndex]) {
+                        if (gameState.currentNoteIndex < gameState.noteSequence.length && block.note === gameState.noteSequence[gameState.currentNoteIndex].note) {
                             gameState.score += 100; gameState.currentNoteIndex++;
                             gameState.lastCorrectNote = block.note; // Track last correct note
-                            createNoteHitEffect(block.x + block.width/2, block.y, block.color);
+                            createNoteHitEffect(block.x + block.width/2, block.y + block.height/2, block.color);
                             if (gameState.currentNoteIndex >= gameState.noteSequence.length) { gameState.levelComplete = true; triggerFireworksShow(); setTimeout(nextLevel, 4000); }
                         } else if (gameState.currentNoteIndex < gameState.noteSequence.length) { gameState.score = Math.max(0, gameState.score - 20); }
                         updateUI();
@@ -906,6 +962,46 @@ const songs = [
             }
             if (Math.abs(player.vx) > 0.1 || !player.grounded) { player.eyeFrame = (player.eyeFrame + 0.1) % (Math.PI * 2); }
             else { player.eyeFrame = (player.eyeFrame + 0.02) % (Math.PI * 2); }
+        }
+
+        function handleCanvasClick(event) {
+            if (!gameState.started || gameState.levelComplete) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (event.clientX - rect.left) * scaleX;
+            const y = (event.clientY - rect.top) * scaleY;
+
+            blocks.forEach(block => {
+                if (x >= block.x && x <= block.x + block.width &&
+                    y >= block.y && y <= block.y + block.height) {
+
+                    playNote(block.note, 300);
+                    block.lastHit = Date.now(); // For visual feedback in draw()
+
+                    // Check if the hit note is the correct one in sequence
+                    if (gameState.currentNoteIndex < gameState.noteSequence.length &&
+                        block.note === gameState.noteSequence[gameState.currentNoteIndex].note) { // Access .note from the object
+
+                        gameState.score += 100;
+                        gameState.currentNoteIndex++;
+                        gameState.lastCorrectNote = block.note;
+                        createNoteHitEffect(block.x + block.width / 2, block.y + block.height / 2, block.color); // Centered effect
+
+                        if (gameState.currentNoteIndex >= gameState.noteSequence.length) {
+                            gameState.levelComplete = true;
+                            triggerFireworksShow();
+                            setTimeout(nextLevel, 4000);
+                        }
+                    } else if (gameState.currentNoteIndex < gameState.noteSequence.length) {
+                        // Optional: Penalize for wrong tap or just do nothing
+                        gameState.score = Math.max(0, gameState.score - 20); // Example penalty
+                    }
+                    updateUI();
+                    // Consider if draw() needs to be called here for immediate visual feedback on block hit
+                }
+            });
         }
 
         async function nextLevel(){if(!gameState.started)return;gameState.level++;gameState.currentSong=songs[(gameState.level-1)%songs.length];gameState.noteSequence=[...gameState.currentSong.notes];gameState.currentNoteIndex=0;gameState.levelComplete=false;gameState.lastCorrectNote=null;particles.length=0;player.x=50;player.y=canvas.height-player.height-50;player.vx=0;player.vy=0;updateUI();document.getElementById('songName').textContent=gameState.currentSong.name;await playSong(gameState.currentSong);if(!gameLoopRequest)gameLoop()}
@@ -948,6 +1044,7 @@ const songs = [
         for(let i=particles.length-1;i>=0;i--){particles[i].update();if(particles[i].life<=0||particles[i].size<=.5){particles.splice(i,1)}}draw();gameLoopRequest=requestAnimationFrame(gameLoop)}
         function drawStartScreenOverlay(){ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(canvas.width*.15,canvas.height*.3,canvas.width*.7,canvas.height*.33);ctx.fillStyle='white';ctx.font=`bold ${canvas.width*.06}px Arial`;ctx.textAlign='center';ctx.fillText('Solfege Hero',canvas.width/2,canvas.height*.45);ctx.font=`${canvas.width*.03}px Arial`;ctx.fillText('Press "Start Game" to begin!',canvas.width/2,canvas.height*.55)}
         setCanvasSize();showInstructions();
+        canvas.addEventListener('click', handleCanvasClick);
         function lightenColor(c,p){const n=parseInt(String(c).replace('#',''),16),a=Math.round(2.55*p),R=(n>>16)+a,G=(n>>8&0xFF)+a,B=(n&0xFF)+a;return"#"+(0x1000000+(R<255?R<1?0:R:255)*0x10000+(G<255?G<1?0:G:255)*0x100+(B<255?B<1?0:B:255)).toString(16).slice(1)}
         function darkenColor(c,p){const n=parseInt(String(c).replace('#',''),16),a=Math.round(2.55*p),R=(n>>16)-a,G=(n>>8&0xFF)-a,B=(n&0xFF)-a;return"#"+(0x1000000+(R>0?R:0)*0x10000+(G>0?G:0)*0x100+(B>0?B:0)).toString(16).slice(1)}
     </script>
