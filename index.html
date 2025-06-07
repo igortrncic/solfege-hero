@@ -869,24 +869,38 @@ const songs = [
 
         function updateDisplayedNotes() {
             const notesDisplayElement = document.getElementById('currentSongNotes').querySelector('span');
-            if (!gameState.currentSong) {
+            if (!gameState.currentSong || gameState.currentNoteIndex === 0) {
                 notesDisplayElement.innerHTML = '-';
                 return;
             }
 
-            let notesHtml = gameState.noteSequence.map((noteObj, index) => {
-                let noteText = noteObj.note;
-                if (index === gameState.currentNoteIndex && !gameState.levelComplete) {
-                    return `<strong style="color: #FF6B6B; font-size: 1.1em;">${noteText}</strong>`; // Highlight current note
-                }
-                return noteText;
-            }).join(' - ');
+            let notesHtml = '';
+            for (let i = 0; i < gameState.currentNoteIndex; i++) {
+                const noteObj = gameState.noteSequence[i];
+                const noteName = noteObj.note;
+                const noteColor = notes[noteName] ? notes[noteName].color : '#FFFFFF'; // Default to white if color not found
 
-            if (gameState.levelComplete) {
-                 notesHtml = gameState.noteSequence.map(noteObj => noteObj.note).join(' - ') + " - ✔️";
+                let style = `color: ${noteColor};`;
+                if (i === gameState.currentNoteIndex - 1) {
+                    // Highlight the last played note
+                    style += ' font-weight: bold; text-decoration: underline; font-size: 1.1em;';
+                }
+
+                notesHtml += `<span style="${style}">${noteName}</span>`;
+
+                if (i < gameState.currentNoteIndex - 1) {
+                    notesHtml += ' - '; // Add separator if not the last note displayed
+                }
             }
 
-            notesDisplayElement.innerHTML = notesHtml;
+            // If no notes have been correctly played yet (currentNoteIndex is 0, handled by the first check)
+            // or if notesHtml is still empty for some reason (e.g. currentNoteIndex became 0 after being >0)
+            // ensure a placeholder is shown.
+            if (notesHtml === '') {
+                 notesDisplayElement.innerHTML = '-';
+            } else {
+                 notesDisplayElement.innerHTML = notesHtml;
+            }
         }
 
         function updateUI(){
@@ -1047,6 +1061,16 @@ const songs = [
         canvas.addEventListener('click', handleCanvasClick);
         function lightenColor(c,p){const n=parseInt(String(c).replace('#',''),16),a=Math.round(2.55*p),R=(n>>16)+a,G=(n>>8&0xFF)+a,B=(n&0xFF)+a;return"#"+(0x1000000+(R<255?R<1?0:R:255)*0x10000+(G<255?G<1?0:G:255)*0x100+(B<255?B<1?0:B:255)).toString(16).slice(1)}
         function darkenColor(c,p){const n=parseInt(String(c).replace('#',''),16),a=Math.round(2.55*p),R=(n>>16)-a,G=(n>>8&0xFF)-a,B=(n&0xFF)-a;return"#"+(0x1000000+(R>0?R:0)*0x10000+(G>0?G:0)*0x100+(B>0?B:0)).toString(16).slice(1)}
+
+        // Initialize and display the first level when the page loads
+        window.onload = () => {
+            loadLevel(gameState.currentLevel);
+            // updateLivesDisplay(); // Initial display of lives
+            // updateScoreDisplay(); // Initial display of score
+            // updateLevelDisplay(); // Initial display of level
+            // updateSongProgressDisplay(); // Initial display of song progress
+            updateUI();
+        };
     </script>
 </body>
 </html>
