@@ -280,8 +280,28 @@
             'c': { freq: 523.25, color: '#FF0000', name: 'Do (high)' }
         };
         const songs = [
-            { name: "Twinkle Twinkle", notes: ['C', 'C', 'G', 'G', 'A', 'A', 'G', 'F', 'F', 'E', 'E', 'D', 'D', 'C'], tempo: 500 },
-            { name: "Mary Had a Little Lamb", notes: ['E', 'D', 'C', 'D', 'E', 'E', 'E', 'D', 'D', 'D', 'E', 'G', 'G'], tempo: 400 },
+            { name: "Twinkle Twinkle", notes: [
+                {note: 'C', duration: 'quarter'}, {note: 'C', duration: 'quarter'},
+                {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'},
+                {note: 'A', duration: 'quarter'}, {note: 'A', duration: 'quarter'},
+                {note: 'G', duration: 'half'},
+                {note: 'F', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
+                {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'},
+                {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
+                {note: 'C', duration: 'half'}
+              ], tempo: 500
+            },
+            { name: "Mary Had a Little Lamb", notes: [
+                {note: 'E', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'},
+                {note: 'C', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
+                {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'},
+                {note: 'E', duration: 'half'},
+                {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
+                {note: 'D', duration: 'half'},
+                {note: 'E', duration: 'quarter'}, {note: 'G', duration: 'quarter'},
+                {note: 'G', duration: 'half'}
+              ], tempo: 400
+            },
             { name: "Do-Re-Mi Scale", notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'c', 'c', 'B', 'A', 'G', 'F', 'E', 'D', 'C'], tempo: 450 },
             { name: "Happy Birthday", notes: ['C', 'C', 'D', 'C', 'F', 'E', 'C', 'C', 'D', 'C', 'G', 'F'], tempo: 450 },
             { name: "Old MacDonald", notes: ['G', 'G', 'G', 'D', 'E', 'E', 'D', 'B', 'B', 'A', 'A', 'G'], tempo: 400 },
@@ -661,7 +681,41 @@
         function showInstructions(){instructionsPanel.classList.remove('hidden');clearTimeout(instructionsTimeout);instructionsTimeout=setTimeout(hideInstructions,12000)}
 
         function playNote(nk,d=200){if(!notes[nk])return;const o=audioContext.createOscillator(),g=audioContext.createGain();o.connect(g);g.connect(audioContext.destination);o.frequency.value=notes[nk].freq;o.type='sine';g.gain.setValueAtTime(.2,audioContext.currentTime);g.gain.exponentialRampToValueAtTime(.01,audioContext.currentTime+d/1000);o.start(audioContext.currentTime);o.stop(audioContext.currentTime+d/1000)}
-        async function playSong(s){for(let i=0;i<s.notes.length;i++){playNote(s.notes[i],s.tempo*.8);await new Promise(r=>setTimeout(r,s.tempo))}}
+
+        const durationMultipliers = {
+            'sixteenth': 0.25,
+            'eighth': 0.5,
+            'quarter': 1,
+            'dotted_quarter': 1.5,
+            'half': 2,
+            'whole': 4
+        };
+
+        async function playSong(s) {
+            for (let i = 0; i < s.notes.length; i++) {
+                const noteObj = s.notes[i];
+
+                // Handle songs that might still use the old string format for notes
+                if (typeof noteObj === 'string') {
+                    playNote(noteObj, s.tempo * 0.8); // Default old behavior
+                    await new Promise(r => setTimeout(r, s.tempo));
+                } else {
+                    const noteName = noteObj.note;
+                    const durationName = noteObj.duration;
+
+                    let multiplier = durationMultipliers[durationName];
+                    if (multiplier === undefined) {
+                        console.warn(`Unknown duration: ${durationName}, defaulting to quarter note (multiplier 1).`);
+                        multiplier = 1;
+                    }
+
+                    const noteDurationMs = s.tempo * multiplier;
+
+                    playNote(noteName, noteDurationMs);
+                    await new Promise(r => setTimeout(r, noteDurationMs));
+                }
+            }
+        }
 
         function createLevel(levelIndex) {
             blocks = []; platforms = [];
