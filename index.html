@@ -279,34 +279,84 @@
             'B': { freq: 493.88, color: '#9400D3', name: 'Ti' },
             'c': { freq: 523.25, color: '#FF0000', name: 'Do (high)' }
         };
-        const songs = [
-            { name: "Twinkle Twinkle", notes: [
-                {note: 'C', duration: 'quarter'}, {note: 'C', duration: 'quarter'},
-                {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'},
-                {note: 'A', duration: 'quarter'}, {note: 'A', duration: 'quarter'},
-                {note: 'G', duration: 'half'},
-                {note: 'F', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
-                {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'},
-                {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
-                {note: 'C', duration: 'half'}
-              ], tempo: 500
-            },
-            { name: "Mary Had a Little Lamb", notes: [
-                {note: 'E', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'},
-                {note: 'C', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
-                {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'},
-                {note: 'E', duration: 'half'},
-                {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
-                {note: 'D', duration: 'half'},
-                {note: 'E', duration: 'quarter'}, {note: 'G', duration: 'quarter'},
-                {note: 'G', duration: 'half'}
-              ], tempo: 400
-            },
-            { name: "Do-Re-Mi Scale", notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'c', 'c', 'B', 'A', 'G', 'F', 'E', 'D', 'C'], tempo: 450 },
-            { name: "Happy Birthday", notes: ['C', 'C', 'D', 'C', 'F', 'E', 'C', 'C', 'D', 'C', 'G', 'F'], tempo: 450 },
-            { name: "Old MacDonald", notes: ['G', 'G', 'G', 'D', 'E', 'E', 'D', 'B', 'B', 'A', 'A', 'G'], tempo: 400 },
-            { name: "Pop Goes the Weasel", notes: ['C', 'D', 'E', 'C', 'E', 'F', 'G', 'G', 'A', 'G', 'F', 'E', 'C', 'D', 'C'], tempo: 400 }
-        ];
+const songs = [
+    {
+        name: "Jingle Bells",
+        notes: [
+            {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'half'},
+            {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'half'},
+            {note: 'E', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'C', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'}, {note: 'E', duration: 'whole'},
+            {note: 'F', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'F', duration: 'dotted_quarter'}, {note: 'F', duration: 'eighth'},
+            {note: 'F', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'eighth'}, {note: 'E', duration: 'eighth'},
+            {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'D', duration: 'quarter'}, {note: 'C', duration: 'half'}
+        ],
+        tempo: 380
+    },
+    {
+        name: "London Bridge",
+        notes: [
+            {note: 'G', duration: 'dotted_quarter'}, {note: 'A', duration: 'eighth'}, {note: 'G', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
+            {note: 'E', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'G', duration: 'half'},
+            {note: 'G', duration: 'dotted_quarter'}, {note: 'A', duration: 'eighth'}, {note: 'G', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
+            {note: 'E', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'G', duration: 'half'}
+        ],
+        tempo: 400
+    },
+    {
+        name: "Mary Had a Little Lamb",
+        notes: [
+            {note: 'E', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'}, {note: 'C', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
+            {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'half'},
+            {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'half'},
+            {note: 'E', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'half'}
+        ],
+        tempo: 400
+    },
+    {
+        name: "Old MacDonald",
+        notes: [
+            {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
+            {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'D', duration: 'half'},
+            {note: 'B', duration: 'quarter'}, {note: 'B', duration: 'quarter'}, {note: 'A', duration: 'quarter'}, {note: 'A', duration: 'quarter'},
+            {note: 'G', duration: 'half'}
+        ],
+        tempo: 400
+    },
+    {
+        name: "Pop Goes the Weasel",
+        notes: [
+            {note: 'C', duration: 'eighth'}, {note: 'D', duration: 'eighth'}, {note: 'E', duration: 'quarter'}, {note: 'C', duration: 'quarter'},
+            {note: 'E', duration: 'eighth'}, {note: 'F', duration: 'eighth'}, {note: 'G', duration: 'half'},
+            {note: 'G', duration: 'eighth'}, {note: 'A', duration: 'eighth'}, {note: 'G', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
+            {note: 'E', duration: 'eighth'}, {note: 'C', duration: 'eighth'}, {note: 'D', duration: 'quarter'}, {note: 'C', duration: 'half'}
+        ],
+        tempo: 400
+    },
+    {
+        name: "Row Row Row Your Boat",
+        notes: [
+            {note: 'C', duration: 'quarter'}, {note: 'C', duration: 'quarter'}, {note: 'C', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'},
+            {note: 'E', duration: 'half'},
+            {note: 'E', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'}, {note: 'E', duration: 'dotted_quarter'}, {note: 'F', duration: 'eighth'},
+            {note: 'G', duration: 'half'},
+            {note: 'c', duration: 'eighth'}, {note: 'c', duration: 'eighth'}, {note: 'c', duration: 'eighth'},
+            {note: 'G', duration: 'eighth'}, {note: 'G', duration: 'eighth'}, {note: 'G', duration: 'eighth'},
+            {note: 'E', duration: 'eighth'}, {note: 'E', duration: 'eighth'}, {note: 'E', duration: 'eighth'},
+            {note: 'C', duration: 'eighth'}, {note: 'C', duration: 'eighth'}, {note: 'C', duration: 'eighth'}
+        ],
+        tempo: 420
+    },
+    {
+        name: "Twinkle Twinkle",
+        notes: [
+            {note: 'C', duration: 'quarter'}, {note: 'C', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'},
+            {note: 'A', duration: 'quarter'}, {note: 'A', duration: 'quarter'}, {note: 'G', duration: 'half'},
+            {note: 'F', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'},
+            {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'}, {note: 'C', duration: 'half'}
+        ],
+        tempo: 500
+    }
+];
         let gameState = { started: false, level: 0, score: 0, currentSong: null, currentNoteIndex: 0, noteSequence: [], levelComplete: false, lastCorrectNote: null };
         const player = {
             x: 50, y: 0, width: 60, height: 60,
