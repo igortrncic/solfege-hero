@@ -285,10 +285,7 @@ const songs = [
         notes: [
             {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'half'},
             {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'half'},
-            {note: 'E', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'C', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'}, {note: 'E', duration: 'whole'},
-            {note: 'F', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'F', duration: 'dotted_quarter'}, {note: 'F', duration: 'eighth'},
-            {note: 'F', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'eighth'}, {note: 'E', duration: 'eighth'},
-            {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'D', duration: 'quarter'}, {note: 'C', duration: 'half'}
+            {note: 'E', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'C', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'}, {note: 'E', duration: 'whole'}
         ],
         tempo: 380
     },
@@ -741,6 +738,13 @@ const songs = [
             'whole': 4
         };
 
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
         async function playSong(s) {
             for (let i = 0; i < s.notes.length; i++) {
                 const noteObj = s.notes[i];
@@ -808,6 +812,7 @@ const songs = [
         }
 
         async function startGame() {
+            shuffleArray(songs);
             if (audioContext.state === 'suspended') await audioContext.resume();
             gameState.started = true; gameState.level = 1; gameState.score = 0;
             gameState.currentSong = songs[0]; gameState.noteSequence = [...gameState.currentSong.notes];
