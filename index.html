@@ -869,22 +869,32 @@ const songs = [
 
         function updateDisplayedNotes() {
             const notesDisplayElement = document.getElementById('currentSongNotes').querySelector('span');
-            if (!gameState.currentSong) {
-                notesDisplayElement.innerHTML = '-';
+            if (!gameState.currentSong || gameState.currentNoteIndex === 0) {
+                // Display "None" or an empty string if no song or no notes played yet
+                notesDisplayElement.innerHTML = (gameState.currentSong && gameState.currentNoteIndex === 0) ? 'None yet' : '-';
                 return;
             }
 
-            let notesHtml = gameState.noteSequence.map((noteObj, index) => {
-                let noteText = noteObj.note;
-                if (index === gameState.currentNoteIndex && !gameState.levelComplete) {
-                    return `<strong style="color: #FF6B6B; font-size: 1.1em;">${noteText}</strong>`; // Highlight current note
-                }
-                return noteText;
-            }).join(' - ');
+            // Get the notes that have been correctly played so far
+            // gameState.currentNoteIndex is the index of the *next* note to be played,
+            // so slice up to this index.
+            const playedNotesSequence = gameState.noteSequence.slice(0, gameState.currentNoteIndex);
+
+            let notesHtml = playedNotesSequence.map(noteObj => noteObj.note).join(' - ');
 
             if (gameState.levelComplete) {
-                 notesHtml = gameState.noteSequence.map(noteObj => noteObj.note).join(' - ') + " - ✔️";
+                // If level is complete, all notes of the sequence were played.
+                notesHtml = gameState.noteSequence.map(noteObj => noteObj.note).join(' - ') + " - ✔️";
+            } else if (playedNotesSequence.length === 0 && gameState.currentNoteIndex > 0) {
+                // This case should ideally not be hit if currentNoteIndex > 0 means at least one note played.
+                // However, as a fallback or if logic changes, handle it.
+                notesDisplayElement.innerHTML = 'None yet'; // Or keep previous state
+                return;
+            } else if (playedNotesSequence.length === 0 && gameState.currentNoteIndex === 0) {
+                 notesDisplayElement.innerHTML = 'None yet';
+                 return;
             }
+
 
             notesDisplayElement.innerHTML = notesHtml;
         }
