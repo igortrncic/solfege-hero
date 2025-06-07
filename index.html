@@ -280,12 +280,15 @@
             'c': { freq: 523.25, color: '#FF0000', name: 'Do (high)' }
         };
         const songs = [
-            { name: "Twinkle Twinkle", notes: ['C', 'C', 'G', 'G', 'A', 'A', 'G', 'F', 'F', 'E', 'E', 'D', 'D', 'C'], tempo: 500 },
-            { name: "Mary Had a Little Lamb", notes: ['E', 'D', 'C', 'D', 'E', 'E', 'E', 'D', 'D', 'D', 'E', 'G', 'G'], tempo: 400 },
             { name: "Do-Re-Mi Scale", notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'c', 'c', 'B', 'A', 'G', 'F', 'E', 'D', 'C'], tempo: 450 },
             { name: "Happy Birthday", notes: ['C', 'C', 'D', 'C', 'F', 'E', 'C', 'C', 'D', 'C', 'G', 'F'], tempo: 450 },
+            { name: "Jingle Bells", notes: ['E', 'E', 'E', 'E', 'E', 'E', 'E', 'G', 'C', 'D', 'E', 'F', 'F', 'F', 'F', 'F', 'E', 'G', 'G', 'F', 'D', 'C'], tempo: 380 },
+            { name: "London Bridge", notes: ['G', 'A', 'G', 'F', 'E', 'F', 'G', 'G', 'G', 'A', 'G', 'F', 'E', 'F', 'G', 'G'], tempo: 400 },
+            { name: "Mary Had a Little Lamb", notes: ['E', 'D', 'C', 'D', 'E', 'E', 'E', 'D', 'D', 'D', 'E', 'G', 'G'], tempo: 400 },
             { name: "Old MacDonald", notes: ['G', 'G', 'G', 'D', 'E', 'E', 'D', 'B', 'B', 'A', 'A', 'G'], tempo: 400 },
-            { name: "Pop Goes the Weasel", notes: ['C', 'D', 'E', 'C', 'E', 'F', 'G', 'G', 'A', 'G', 'F', 'E', 'C', 'D', 'C'], tempo: 400 }
+            { name: "Pop Goes the Weasel", notes: ['C', 'D', 'E', 'C', 'E', 'F', 'G', 'G', 'A', 'G', 'F', 'E', 'C', 'D', 'C'], tempo: 400 },
+            { name: "Row Row Row Your Boat", notes: ['C', 'C', 'C', 'D', 'E', 'E', 'D', 'E', 'F', 'G', 'C', 'C', 'C', 'G', 'E', 'C'], tempo: 420 },
+            { name: "Twinkle Twinkle", notes: ['C', 'C', 'G', 'G', 'A', 'A', 'G', 'F', 'F', 'E', 'E', 'D', 'D', 'C'], tempo: 500 }
         ];
         let gameState = { started: false, level: 0, score: 0, currentSong: null, currentNoteIndex: 0, noteSequence: [], levelComplete: false, lastCorrectNote: null };
         const player = {
