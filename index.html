@@ -1,1060 +1,651 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Solfege Hero</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(to bottom, #87CEEB, #98D8E8);
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overscroll-behavior: none; /* Prevents pull-to-refresh on mobile */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Solfege Hero: Remastered</title>
+  <style>
+    :root {
+      --bg: #090d1f;
+      --card: #121933;
+      --card2: #1b2550;
+      --accent: #71f6ff;
+      --good: #6bff8d;
+      --bad: #ff6f91;
+      --text: #ecf2ff;
+    }
 
-        #gameContainer {
-            position: relative;
-            margin: 10px auto; /* Reduced top margin */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+    * { box-sizing: border-box; }
 
-        canvas {
-            border: 3px solid #333;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
-            max-width: 100%; /* Ensure canvas is responsive */
-        }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 10% 10%, #2c3f94 0, #131a3d 36%, var(--bg) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+      gap: 12px;
+    }
 
-        #ui {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            font-size: clamp(14px, 3vw, 18px); /* Responsive font size */
-            font-weight: bold;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
-            z-index: 10;
-        }
+    h1 {
+      margin: 6px 0 0;
+      font-size: clamp(1.4rem, 4vw, 2.4rem);
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
 
-        #gameControls { /* Changed from #controls / #gameButtons */
-            margin-top: 10px;
-            text-align: center;
-        }
+    .layout {
+      width: min(1100px, 98vw);
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 12px;
+    }
 
-        button { /* General button styling */
-            margin: 5px;
-            padding: 10px 15px;
-            font-size: clamp(12px, 2.5vw, 16px);
-            font-weight: bold;
-            color: white;
-            background: #4CAF50;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-        }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 14px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+    }
 
-        button:hover {
-            background: #45a049;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0,0,0,0.2);
-        }
+    .game-wrap { padding: 10px; position: relative; }
 
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+    canvas {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,0.2);
+      display: block;
+      background: linear-gradient(180deg, #52a3ff 0%, #8dd1ff 45%, #d6f1ff 100%);
+    }
 
-        #touchControlsContainer {
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            gap: 15px;
-            width: 85%;
-            max-width: 280px;
-            margin-top: 15px;
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            position: relative;
-        }
+    .hud {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      background: rgba(8, 12, 24, 0.7);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.88rem;
+      line-height: 1.35;
+    }
 
-        .touch-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: bold;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            transition: all 0.1s ease;
-        }
+    .sidebar {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-        #touchLeftBtn, #touchRightBtn {
-            background-color: #2196F3;
-            color: white;
-            border: 3px solid #1976D2;
-            border-radius: 15px;
-            width: clamp(50px, 14vw, 65px);
-            height: clamp(40px, 12vw, 50px);
-            font-size: clamp(16px, 4.5vw, 20px);
-            box-shadow: 0 4px #1565C0;
-        }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
 
-        #touchLeftBtn:active, #touchRightBtn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px #1565C0;
-        }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #091220;
+      background: linear-gradient(180deg, #8ce9ff, #71f6ff);
+      transition: transform .15s ease, filter .2s ease;
+    }
 
-        #touchJumpBtn {
-            background-color: #4CAF50;
-            color: white;
-            border: 3px solid #388E3C;
-            border-radius: 50%;
-            width: clamp(60px, 16vw, 75px);
-            height: clamp(60px, 16vw, 75px);
-            font-size: clamp(22px, 6vw, 28px);
-            box-shadow: 0 5px #2E7D32;
-            position: relative;
-            top: -10px; /* Raise jump button higher */
-        }
+    button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    button:active { transform: translateY(0); }
 
-        #touchJumpBtn:active {
-            transform: translateY(2px);
-            box-shadow: 0 3px #2E7D32;
-            top: -8px;
-        }
+    .ghost { background: linear-gradient(180deg, #9fa7ff, #7486ff); color: white; }
 
-        /* Add finger-friendly touch indicators */
-        #touchLeftBtn::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            border: 1px solid rgba(33, 150, 243, 0.3);
-            border-radius: 13px;
-            pointer-events: none;
-        }
+    .status {
+      min-height: 68px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 0.95rem;
+    }
 
-        #touchRightBtn::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            border: 1px solid rgba(33, 150, 243, 0.3);
-            border-radius: 13px;
-            pointer-events: none;
-        }
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      font-size: 0.78rem;
+    }
 
-        #touchJumpBtn::before {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            border: 2px solid rgba(76, 175, 80, 0.3);
-            border-radius: 50%;
-            pointer-events: none;
-        }
+    .legend span {
+      text-align: center;
+      border-radius: 8px;
+      color: #0e1325;
+      font-weight: 800;
+      padding: 6px 0;
+    }
 
-        #instructions {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 500px;
-            padding: 20px;
-            background: rgba(255,255,255,0.95);
-            border-radius: 10px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-            z-index: 100;
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-        }
-         #instructions.hidden {
-            opacity: 0;
-            transform: translate(-50%, -60%);
-            pointer-events: none;
-        }
+    .touch {
+      margin-top: 6px;
+      display: none;
+      gap: 10px;
+      justify-content: center;
+    }
 
-        #instructions h2 { margin-top: 0; }
-        #closeInstructionsBtn {
-            position: absolute; top: 10px; right: 10px; background: #ff6b6b;
-            color: white; border: none; border-radius: 50%; width: 30px; height: 30px;
-            font-size: 18px; font-weight: bold; line-height: 30px; text-align: center;
-            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-         #closeInstructionsBtn:hover { background: #e74c3c; }
+    .touch button {
+      width: 64px;
+      height: 56px;
+      border-radius: 14px;
+      padding: 0;
+      font-size: 1.2rem;
+    }
 
-        h1 {
-            color: #333; text-align: center; margin-bottom: 10px;
-             font-size: clamp(24px, 5vw, 32px);
-        }
-        .note-legend {
-            display: flex; flex-wrap: wrap; justify-content: center;
-            gap: 5px; margin-top: 10px;
-        }
-        .note-box {
-            padding: 3px 8px; border-radius: 5px; font-weight: bold; color: white;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); font-size: clamp(10px, 2vw, 12px);
-        }
-    </style>
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .touch { display: flex; }
+    }
+  </style>
 </head>
 <body>
-    <h1>🎵 Solfege Hero 🎵</h1>
+  <h1>🎵 Solfege Hero: Remastered 🎮</h1>
 
-    <div id="gameContainer">
-        <button id="melodyReminderBtn" style="position: absolute; top: 5px; right: 5px; z-index: 20; padding: 8px 12px; background-color: #FFA500; /* Orange */">Repeat Hint</button>
-        <canvas id="gameCanvas"></canvas>
-        <div id="ui">
-            <div>Score: <span id="score">0</span></div>
-            <div>Level: <span id="level">1</span></div>
-            <div>Song: <span id="songName">-</span></div>
-            <div id="progress" style="margin-top: 5px;">Progress: <span id="progressText">0/0</span></div>
-            <div id="currentSongNotes" style="margin-top: 5px; font-size: clamp(10px, 2.5vw, 14px); color: #FFFF00; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">Notes: <span>-</span></div>
-        </div>
+  <section class="layout">
+    <div class="card game-wrap">
+      <canvas id="gameCanvas" width="900" height="470"></canvas>
+      <div class="hud" id="hud"></div>
     </div>
 
-    <div id="touchControlsContainer">
-        <div class="touch-btn" id="touchLeftBtn">◀</div>
-        <div class="touch-btn" id="touchJumpBtn">▲</div>
-        <div class="touch-btn" id="touchRightBtn">▶</div>
-    </div>
+    <aside class="card sidebar">
+      <div><strong>Massive remake goals:</strong> polished visuals, cleaner architecture, and a full level campaign.</div>
 
-    <div id="gameControls"> <!-- ID Changed -->
-        <button id="startBtn">Start Game</button>
-        <button id="restartLevelBtn">Restart Level</button>
-        <button id="restartGameBtn">Restart Game</button>
-    </div>
+      <div class="row">
+        <button id="startBtn">Start / Continue</button>
+        <button id="hintBtn" class="ghost">Replay Melody</button>
+      </div>
+      <div class="row">
+        <button id="restartLevelBtn" class="ghost">Restart Level</button>
+        <button id="resetRunBtn" class="ghost">Reset Full Run</button>
+      </div>
 
-    <div id="instructions">
-        <button id="closeInstructionsBtn">✖</button>
-        <h2>How to Play:</h2>
-        <p>1. Listen carefully to the nursery rhyme at the beginning of each level.</p>
-        <p>2. Remember the melody and recreate it by jumping on the colored blocks.</p>
-        <p>3. Use Arrow Keys or on-screen buttons to move left/right and Spacebar or ▲ to jump.</p>
-        <p>4. No hints mid-song! Trust your memory and ears.</p>
-        <p>5. You can restart the level to hear the song again if needed.</p>
+      <div class="status" id="status"></div>
 
-        <div class="note-legend">
-            <div class="note-box" style="background: #FF0000;">C</div>
-            <div class="note-box" style="background: #FF7F00;">D</div>
-            <div class="note-box" style="background: #FFFF00; color: #333;">E</div>
-            <div class="note-box" style="background: #00FF00; color: #333;">F</div>
-            <div class="note-box" style="background: #0000FF;">G</div>
-            <div class="note-box" style="background: #4B0082;">A</div>
-            <div class="note-box" style="background: #9400D3;">B</div>
-            <div class="note-box" style="background: #FF0000;">c</div>
-        </div>
-    </div>
+      <div><strong>Controls:</strong> ← → to move, Space / ↑ to jump. Land on pads in melody order.</div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const instructionsPanel = document.getElementById('instructions');
-        const closeInstructionsBtn = document.getElementById('closeInstructionsBtn');
-        let instructionsTimeout;
+      <div class="legend" id="legend"></div>
 
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const notes = {
-            'C': { freq: 261.63, color: '#FF0000', name: 'Do' },
-            'D': { freq: 293.66, color: '#FF7F00', name: 'Re' },
-            'E': { freq: 329.63, color: '#FFFF00', name: 'Mi' },
-            'F': { freq: 349.23, color: '#00FF00', name: 'Fa' },
-            'G': { freq: 392.00, color: '#0000FF', name: 'Sol' },
-            'A': { freq: 440.00, color: '#4B0082', name: 'La' },
-            'B': { freq: 493.88, color: '#9400D3', name: 'Ti' },
-            'c': { freq: 523.25, color: '#FF0000', name: 'Do (high)' }
+      <div><strong>Levels:</strong> 8 handcrafted levels with increasing melody length, speed, and movement challenge.</div>
+    </aside>
+  </section>
+
+  <div class="touch" id="touchControls">
+    <button id="leftBtn">◀</button>
+    <button id="jumpBtn">▲</button>
+    <button id="rightBtn">▶</button>
+  </div>
+
+  <script>
+    const NOTE_BANK = {
+      C: { freq: 261.63, color: '#ff5f73', solfege: 'Do' },
+      D: { freq: 293.66, color: '#ffa942', solfege: 'Re' },
+      E: { freq: 329.63, color: '#ffe35f', solfege: 'Mi' },
+      F: { freq: 349.23, color: '#71f58f', solfege: 'Fa' },
+      G: { freq: 392.0, color: '#6cb8ff', solfege: 'Sol' },
+      A: { freq: 440.0, color: '#9a87ff', solfege: 'La' },
+      B: { freq: 493.88, color: '#d77dff', solfege: 'Ti' },
+      c: { freq: 523.25, color: '#ff89a6', solfege: 'Do↑' }
+    };
+
+    const LEVELS = [
+      { name: 'Warmup Meadow', song: 'Do Re Mi', tempo: 520, mistakesAllowed: 4, sequence: 'C D E D C'.split(' '), moving: false },
+      { name: 'Bridge of Echoes', song: 'Small Steps', tempo: 470, mistakesAllowed: 4, sequence: 'E F G F E D'.split(' '), moving: false },
+      { name: 'Skyline Etude', song: 'Rising Arc', tempo: 440, mistakesAllowed: 3, sequence: 'C E G A G E D'.split(' '), moving: true },
+      { name: 'Crystal Pass', song: 'Mirror Walk', tempo: 410, mistakesAllowed: 3, sequence: 'G E F D E C D'.split(' '), moving: true },
+      { name: 'Clocktower Sync', song: 'Pulse Trial', tempo: 390, mistakesAllowed: 3, sequence: 'C D E G E D C G'.split(' '), moving: true },
+      { name: 'Moonlit Garden', song: 'Lullaby Twist', tempo: 370, mistakesAllowed: 2, sequence: 'E D C E G A G E'.split(' '), moving: true },
+      { name: 'Storm Conservatory', song: 'Wind Pattern', tempo: 350, mistakesAllowed: 2, sequence: 'G A B c B A G E D'.split(' '), moving: true },
+      { name: 'Finale: Hero Anthem', song: 'Grand Cadence', tempo: 330, mistakesAllowed: 2, sequence: 'C E G c B A G E F D C'.split(' '), moving: true }
+    ];
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const hud = document.getElementById('hud');
+    const statusEl = document.getElementById('status');
+    const legendEl = document.getElementById('legend');
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    const state = {
+      running: false,
+      levelIndex: 0,
+      score: 0,
+      combo: 0,
+      bestCombo: 0,
+      sequenceIndex: 0,
+      mistakes: 0,
+      startedListening: false,
+      message: 'Press Start to begin the campaign.',
+      particles: []
+    };
+
+    const input = { left: false, right: false, jumpQueued: false };
+
+    const world = {
+      gravity: 0.6,
+      groundY: canvas.height - 60,
+      cameraShake: 0,
+      stars: Array.from({ length: 35 }, () => ({ x: Math.random() * canvas.width, y: Math.random() * 160, r: Math.random() * 2 + 1 })),
+      hills: Array.from({ length: 4 }, (_, i) => ({ x: i * 260, h: 100 + Math.random() * 50 }))
+    };
+
+    const player = {
+      x: 80, y: 200, w: 40, h: 54,
+      vx: 0, vy: 0,
+      speed: 4.1,
+      jump: -12,
+      grounded: false,
+      facing: 1,
+      lastTouchedPad: null
+    };
+
+    let pads = [];
+    let melodyLocked = false;
+
+    function createPads() {
+      const noteKeys = Object.keys(NOTE_BANK);
+      const count = 8;
+      pads = Array.from({ length: count }, (_, i) => {
+        const note = noteKeys[i];
+        return {
+          x: 80 + i * 95,
+          y: world.groundY - 30 - (i % 2 ? 20 : 0),
+          w: 72,
+          h: 22,
+          note,
+          activePulse: 0,
+          movementPhase: Math.random() * Math.PI * 2
         };
-const songs = [
-    {
-        name: "Jingle Bells",
-        notes: [
-            {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'half'},
-            {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'half'},
-            {note: 'E', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'C', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'}, {note: 'E', duration: 'whole'}
-        ],
-        tempo: 380
-    },
-    {
-        name: "London Bridge",
-        notes: [
-            {note: 'G', duration: 'dotted_quarter'}, {note: 'A', duration: 'eighth'}, {note: 'G', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
-            {note: 'E', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'G', duration: 'half'},
-            {note: 'G', duration: 'dotted_quarter'}, {note: 'A', duration: 'eighth'}, {note: 'G', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
-            {note: 'E', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'G', duration: 'half'}
-        ],
-        tempo: 400
-    },
-    {
-        name: "Mary Had a Little Lamb",
-        notes: [
-            {note: 'E', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'}, {note: 'C', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
-            {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'half'},
-            {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'half'},
-            {note: 'E', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'half'}
-        ],
-        tempo: 400
-    },
-    {
-        name: "Old MacDonald",
-        notes: [
-            {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'D', duration: 'quarter'},
-            {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'D', duration: 'half'},
-            {note: 'B', duration: 'quarter'}, {note: 'B', duration: 'quarter'}, {note: 'A', duration: 'quarter'}, {note: 'A', duration: 'quarter'},
-            {note: 'G', duration: 'half'}
-        ],
-        tempo: 400
-    },
-    {
-        name: "Pop Goes the Weasel",
-        notes: [
-            {note: 'C', duration: 'eighth'}, {note: 'D', duration: 'eighth'}, {note: 'E', duration: 'quarter'}, {note: 'C', duration: 'quarter'},
-            {note: 'E', duration: 'eighth'}, {note: 'F', duration: 'eighth'}, {note: 'G', duration: 'half'},
-            {note: 'G', duration: 'eighth'}, {note: 'A', duration: 'eighth'}, {note: 'G', duration: 'quarter'}, {note: 'F', duration: 'quarter'},
-            {note: 'E', duration: 'eighth'}, {note: 'C', duration: 'eighth'}, {note: 'D', duration: 'quarter'}
-        ],
-        tempo: 400
-    },
-    {
-        name: "Row Row Row Your Boat",
-        notes: [
-            {note: 'C', duration: 'quarter'}, {note: 'C', duration: 'quarter'}, {note: 'C', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'},
-            {note: 'E', duration: 'half'},
-            {note: 'E', duration: 'dotted_quarter'}, {note: 'D', duration: 'eighth'}, {note: 'E', duration: 'dotted_quarter'}, {note: 'F', duration: 'eighth'},
-            {note: 'G', duration: 'half'},
-            {note: 'c', duration: 'eighth'}, {note: 'c', duration: 'eighth'}, {note: 'c', duration: 'eighth'},
-            {note: 'G', duration: 'eighth'}
-        ],
-        tempo: 420
-    },
-    {
-        name: "Twinkle Twinkle",
-        notes: [
-            {note: 'C', duration: 'quarter'}, {note: 'C', duration: 'quarter'}, {note: 'G', duration: 'quarter'}, {note: 'G', duration: 'quarter'},
-            {note: 'A', duration: 'quarter'}, {note: 'A', duration: 'quarter'}, {note: 'G', duration: 'half'},
-            {note: 'F', duration: 'quarter'}, {note: 'F', duration: 'quarter'}, {note: 'E', duration: 'quarter'}, {note: 'E', duration: 'quarter'},
-            {note: 'D', duration: 'quarter'}, {note: 'D', duration: 'quarter'}, {note: 'C', duration: 'half'}
-        ],
-        tempo: 500
+      });
     }
-];
-        let gameState = { started: false, level: 0, score: 0, currentSong: null, currentNoteIndex: 0, noteSequence: [], levelComplete: false, lastCorrectNote: null };
-        const player = {
-            x: 50, y: 0, width: 60, height: 60,
-            vx: 0, vy: 0, speed: 2.8, jumpPower: -16,
-            grounded: false, color: '#FF6B6B', eyeFrame: 0, direction: 1
+
+    function currentLevel() {
+      return LEVELS[state.levelIndex];
+    }
+
+    function playTone(note, duration = 260, volume = 0.18) {
+      const meta = NOTE_BANK[note];
+      if (!meta) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = meta.freq;
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration / 1000);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + duration / 1000 + 0.02);
+    }
+
+    async function playMelody() {
+      if (melodyLocked) return;
+      const level = currentLevel();
+      melodyLocked = true;
+      state.message = `Listen: ${level.song}`;
+      updateStatus();
+      for (const note of level.sequence) {
+        playTone(note, Math.max(130, level.tempo - 80), 0.16);
+        flashPadsByNote(note);
+        await new Promise(r => setTimeout(r, level.tempo));
+      }
+      state.startedListening = true;
+      state.message = 'Your turn. Land on the pads in order!';
+      melodyLocked = false;
+      updateStatus();
+    }
+
+    function flashPadsByNote(note) {
+      pads.forEach(p => {
+        if (p.note === note) p.activePulse = 1;
+      });
+    }
+
+    function setLevel(index, resetScore = false) {
+      state.levelIndex = index;
+      state.sequenceIndex = 0;
+      state.mistakes = 0;
+      state.combo = 0;
+      state.startedListening = false;
+      player.x = 80;
+      player.y = 180;
+      player.vx = 0;
+      player.vy = 0;
+      player.lastTouchedPad = null;
+      if (resetScore) {
+        state.score = 0;
+        state.bestCombo = 0;
+      }
+      createPads();
+      state.message = `Level ${index + 1}: ${currentLevel().name}`;
+      updateStatus();
+    }
+
+    function updateStatus() {
+      const lvl = currentLevel();
+      const progress = `${state.sequenceIndex}/${lvl.sequence.length}`;
+      hud.innerHTML = `
+        <div><strong>Level:</strong> ${state.levelIndex + 1}/${LEVELS.length}</div>
+        <div><strong>Song:</strong> ${lvl.song}</div>
+        <div><strong>Score:</strong> ${state.score}</div>
+        <div><strong>Combo:</strong> ${state.combo} (best ${state.bestCombo})</div>
+        <div><strong>Mistakes:</strong> ${state.mistakes}/${lvl.mistakesAllowed}</div>
+        <div><strong>Progress:</strong> ${progress}</div>
+      `;
+      statusEl.innerHTML = `<strong>${lvl.name}</strong><br>${state.message}`;
+    }
+
+    function spawnBurst(x, y, color) {
+      for (let i = 0; i < 14; i++) {
+        state.particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 5,
+          vy: (Math.random() - 0.8) * 5,
+          life: 28 + Math.random() * 18,
+          color
+        });
+      }
+    }
+
+    function landOnPad(pad) {
+      if (player.lastTouchedPad === pad) return;
+      player.lastTouchedPad = pad;
+      playTone(pad.note, 190, 0.12);
+      pad.activePulse = 1;
+
+      if (!state.startedListening || melodyLocked) return;
+
+      const expected = currentLevel().sequence[state.sequenceIndex];
+      if (pad.note === expected) {
+        state.sequenceIndex += 1;
+        state.combo += 1;
+        state.bestCombo = Math.max(state.bestCombo, state.combo);
+        state.score += 100 + state.combo * 12;
+        spawnBurst(pad.x + pad.w / 2, pad.y, NOTE_BANK[pad.note].color);
+        if (state.sequenceIndex >= currentLevel().sequence.length) {
+          state.score += 250;
+          if (state.levelIndex < LEVELS.length - 1) {
+            state.message = 'Level cleared! Press Start for next level.';
+            state.running = false;
+            setTimeout(() => setLevel(state.levelIndex + 1), 500);
+          } else {
+            state.message = `Campaign complete! Final score: ${state.score}`;
+            state.running = false;
+          }
+        } else {
+          state.message = `Great! Next note: ${currentLevel().sequence[state.sequenceIndex]}`;
+        }
+      } else {
+        state.mistakes += 1;
+        state.combo = 0;
+        state.score = Math.max(0, state.score - 70);
+        world.cameraShake = 8;
+        state.message = `Oops! Expected ${expected}, heard ${pad.note}.`;
+        if (state.mistakes > currentLevel().mistakesAllowed) {
+          state.message = 'Too many mistakes. Restarting level...';
+          state.running = false;
+          setTimeout(() => {
+            setLevel(state.levelIndex);
+            playMelody();
+          }, 700);
+        }
+      }
+      updateStatus();
+    }
+
+    function updatePlayer() {
+      if (!state.running) return;
+      const accel = 0.7;
+      if (input.left) { player.vx = Math.max(player.vx - accel, -player.speed); player.facing = -1; }
+      if (input.right) { player.vx = Math.min(player.vx + accel, player.speed); player.facing = 1; }
+      if (!input.left && !input.right) player.vx *= 0.82;
+
+      if (input.jumpQueued && player.grounded) {
+        player.vy = player.jump;
+        player.grounded = false;
+      }
+      input.jumpQueued = false;
+
+      player.vy += world.gravity;
+      player.x += player.vx;
+      player.y += player.vy;
+
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
+
+      player.grounded = false;
+
+      const floor = world.groundY;
+      if (player.y + player.h >= floor) {
+        player.y = floor - player.h;
+        player.vy = 0;
+        player.grounded = true;
+        player.lastTouchedPad = null;
+      }
+
+      for (const pad of pads) {
+        if (
+          player.vy >= 0 &&
+          player.x + player.w > pad.x &&
+          player.x < pad.x + pad.w &&
+          player.y + player.h <= pad.y + 8 &&
+          player.y + player.h + player.vy >= pad.y
+        ) {
+          player.y = pad.y - player.h;
+          player.vy = 0;
+          player.grounded = true;
+          landOnPad(pad);
+        }
+      }
+    }
+
+    function updateWorld() {
+      const lvl = currentLevel();
+      pads.forEach((p, i) => {
+        p.activePulse = Math.max(0, p.activePulse - 0.05);
+        if (lvl.moving) {
+          p.movementPhase += 0.02 + i * 0.001;
+          p.y += Math.sin(p.movementPhase) * 0.45;
+          p.y = Math.min(world.groundY - 14, Math.max(world.groundY - 80, p.y));
+        }
+      });
+
+      state.particles.forEach(pt => {
+        pt.x += pt.vx;
+        pt.y += pt.vy;
+        pt.vy += 0.12;
+        pt.life -= 1;
+      });
+      state.particles = state.particles.filter(p => p.life > 0);
+
+      world.cameraShake *= 0.82;
+    }
+
+    function drawBackground() {
+      ctx.fillStyle = '#102340';
+      ctx.fillRect(0, 0, canvas.width, 130);
+      world.stars.forEach(star => {
+        ctx.fillStyle = `rgba(255,255,255,${0.5 + Math.sin(performance.now() * 0.002 + star.x) * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.fillStyle = '#4f90da';
+      world.hills.forEach((h, i) => {
+        ctx.beginPath();
+        ctx.ellipse(h.x + 120, canvas.height - 40, 180, h.h, 0, 0, Math.PI * 2);
+        ctx.fill();
+        h.x -= 0.2 + i * 0.02;
+        if (h.x < -320) h.x = canvas.width + 40;
+      });
+
+      ctx.fillStyle = '#2c8a45';
+      ctx.fillRect(0, world.groundY, canvas.width, canvas.height - world.groundY);
+    }
+
+    function drawPads() {
+      pads.forEach(pad => {
+        const note = NOTE_BANK[pad.note];
+        const glow = pad.activePulse * 20;
+        ctx.save();
+        ctx.shadowBlur = glow;
+        ctx.shadowColor = note.color;
+        ctx.fillStyle = note.color;
+        ctx.fillRect(pad.x, pad.y, pad.w, pad.h);
+        ctx.fillStyle = '#091220';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(pad.note, pad.x + pad.w / 2, pad.y + 16);
+        ctx.restore();
+      });
+    }
+
+    function drawPlayer() {
+      ctx.save();
+      ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
+      ctx.scale(player.facing, 1);
+      ctx.fillStyle = '#ffeff3';
+      ctx.fillRect(-player.w / 2, -player.h / 2, player.w, player.h);
+      ctx.fillStyle = '#ff6f91';
+      ctx.fillRect(-player.w / 2, -player.h / 2, player.w, 12);
+      ctx.fillStyle = '#222';
+      ctx.fillRect(4, -8, 4, 4);
+      ctx.fillRect(12, -8, 4, 4);
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      state.particles.forEach(p => {
+        ctx.globalAlpha = Math.max(0, p.life / 35);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    function drawSequenceHint() {
+      const level = currentLevel();
+      const visible = level.sequence.map((note, i) => i < state.sequenceIndex ? '✓' : note).join(' ');
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+      ctx.fillRect(12, canvas.height - 40, canvas.width - 24, 28);
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px sans-serif';
+      ctx.fillText(`Target: ${visible}`, 22, canvas.height - 21);
+    }
+
+    function render() {
+      ctx.save();
+      const shake = world.cameraShake;
+      if (shake > 0.5) {
+        ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+      }
+
+      drawBackground();
+      drawPads();
+      drawPlayer();
+      drawParticles();
+      drawSequenceHint();
+      ctx.restore();
+    }
+
+    function tick() {
+      updatePlayer();
+      updateWorld();
+      render();
+      requestAnimationFrame(tick);
+    }
+
+    function bindControls() {
+      const down = e => {
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', ' '].includes(e.key)) e.preventDefault();
+        if (e.key === 'ArrowLeft') input.left = true;
+        if (e.key === 'ArrowRight') input.right = true;
+        if (e.key === 'ArrowUp' || e.key === ' ') input.jumpQueued = true;
+      };
+      const up = e => {
+        if (e.key === 'ArrowLeft') input.left = false;
+        if (e.key === 'ArrowRight') input.right = false;
+      };
+      window.addEventListener('keydown', down);
+      window.addEventListener('keyup', up);
+
+      const bindTouch = (id, key, isJump = false) => {
+        const el = document.getElementById(id);
+        const press = (ev) => {
+          ev.preventDefault();
+          if (isJump) input.jumpQueued = true;
+          else input[key] = true;
         };
-        const particles = [];
-        let clouds = [];
-        let birds = [];
-        let magicalCreatures = [];
-
-        class Cloud {
-            constructor() {
-                this.x = canvas.width + Math.random() * 200;
-                this.y = Math.random() * (canvas.height * 0.4) + 20;
-                this.size = Math.random() * 40 + 30;
-                this.speed = Math.random() * 0.2 + 0.1; // Slower for relaxing effect
-                this.opacity = Math.random() * 0.3 + 0.1;
-            }
-
-            update() {
-                this.x -= this.speed;
-                if (this.x + this.size < 0) {
-                    this.x = canvas.width + Math.random() * 200;
-                    this.y = Math.random() * (canvas.height * 0.4) + 20;
-                }
-            }
-
-            draw(ctx) {
-                ctx.save();
-                ctx.globalAlpha = this.opacity;
-                ctx.fillStyle = 'white';
-
-                // Draw cloud as overlapping circles
-                const circles = [
-                    {x: 0, y: 0, r: this.size * 0.6},
-                    {x: this.size * 0.4, y: -this.size * 0.1, r: this.size * 0.5},
-                    {x: -this.size * 0.3, y: -this.size * 0.1, r: this.size * 0.4},
-                    {x: this.size * 0.1, y: -this.size * 0.3, r: this.size * 0.3}
-                ];
-
-                circles.forEach(circle => {
-                    ctx.beginPath();
-                    ctx.arc(this.x + circle.x, this.y + circle.y, circle.r, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-
-                ctx.restore();
-            }
-        }
-
-        class Bird {
-            constructor() {
-                this.x = canvas.width + Math.random() * 100;
-                this.y = Math.random() * (canvas.height * 0.6) + 50;
-                this.speed = Math.random() * 0.8 + 0.5; // Slower and more relaxing
-                this.wingPhase = Math.random() * Math.PI * 2;
-                this.size = Math.random() * 8 + 6;
-                this.bobAmount = Math.random() * 2 + 1;
-            }
-
-            update() {
-                this.x -= this.speed;
-                this.wingPhase += 0.3;
-                if (this.x < -50) {
-                    this.x = canvas.width + Math.random() * 200;
-                    this.y = Math.random() * (canvas.height * 0.6) + 50;
-                }
-            }
-
-            draw(ctx) {
-                ctx.save();
-                ctx.fillStyle = '#333';
-
-                const wingOffset = Math.sin(this.wingPhase) * this.bobAmount;
-                const bodyY = this.y + Math.sin(this.wingPhase * 0.5) * 0.5;
-
-                // Draw bird body
-                ctx.beginPath();
-                ctx.ellipse(this.x, bodyY, this.size * 0.6, this.size * 0.3, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Draw wings
-                ctx.beginPath();
-                ctx.ellipse(this.x - this.size * 0.3, bodyY + wingOffset, this.size * 0.4, this.size * 0.2, -0.3, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.beginPath();
-                ctx.ellipse(this.x + this.size * 0.3, bodyY + wingOffset, this.size * 0.4, this.size * 0.2, 0.3, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.restore();
-            }
-        }
-
-        class MagicalCreature {
-            constructor(type = 'unicorn') {
-                this.type = type;
-                this.x = canvas.width + Math.random() * 150;
-                this.y = Math.random() * (canvas.height * 0.5) + 30;
-                this.speed = Math.random() * 0.6 + 0.3;
-                this.wingPhase = Math.random() * Math.PI * 2;
-                this.size = Math.random() * 12 + 15;
-                this.sparklePhase = Math.random() * Math.PI * 2;
-                this.trailParticles = [];
-                this.hornGlow = 0;
-            }
-
-            update() {
-                this.x -= this.speed;
-                this.wingPhase += 0.15;
-                this.sparklePhase += 0.1;
-                this.hornGlow = Math.sin(this.sparklePhase) * 0.5 + 0.5;
-
-                // Add magical trail
-                if (Math.random() < 0.3) {
-                    this.trailParticles.push({
-                        x: this.x - this.size * 0.5,
-                        y: this.y + Math.random() * 10 - 5,
-                        color: `hsl(${(Date.now() * 0.1 + Math.random() * 60) % 360}, 80%, 70%)`,
-                        life: 30,
-                        size: Math.random() * 3 + 2
-                    });
-                }
-
-                // Update trail particles
-                for (let i = this.trailParticles.length - 1; i >= 0; i--) {
-                    this.trailParticles[i].life--;
-                    this.trailParticles[i].size *= 0.95;
-                    if (this.trailParticles[i].life <= 0) {
-                        this.trailParticles.splice(i, 1);
-                    }
-                }
-
-                if (this.x < -100) {
-                    this.x = canvas.width + Math.random() * 300 + 200; // Less frequent appearances
-                    this.y = Math.random() * (canvas.height * 0.5) + 30;
-                }
-            }
-
-            draw(ctx) {
-                // Draw magical trail
-                this.trailParticles.forEach(particle => {
-                    ctx.save();
-                    ctx.globalAlpha = particle.life / 30;
-                    ctx.fillStyle = particle.color;
-                    ctx.beginPath();
-                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                });
-
-                ctx.save();
-                if (this.type === 'unicorn') {
-                    // Unicorn body (white/pink)
-                    ctx.fillStyle = '#F8BBD9';
-                    ctx.beginPath();
-                    ctx.ellipse(this.x, this.y, this.size * 0.8, this.size * 0.5, 0, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // Unicorn head
-                    ctx.fillStyle = '#FFE4E1';
-                    ctx.beginPath();
-                    ctx.ellipse(this.x + this.size * 0.6, this.y - this.size * 0.2, this.size * 0.4, this.size * 0.35, 0, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // Horn with rainbow glow
-                    ctx.save();
-                    ctx.shadowColor = `hsl(${(this.sparklePhase * 50) % 360}, 100%, 60%)`;
-                    ctx.shadowBlur = 8 + this.hornGlow * 5;
-                    ctx.fillStyle = '#FFD700';
-                    ctx.beginPath();
-                    ctx.moveTo(this.x + this.size * 0.8, this.y - this.size * 0.5);
-                    ctx.lineTo(this.x + this.size * 0.7, this.y - this.size * 0.8);
-                    ctx.lineTo(this.x + this.size * 0.9, this.y - this.size * 0.5);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.restore();
-
-                    // Wings with flapping
-                    const wingOffset = Math.sin(this.wingPhase) * this.size * 0.3;
-                    ctx.fillStyle = '#E6E6FA';
-                    ctx.beginPath();
-                    ctx.ellipse(this.x - this.size * 0.2, this.y - this.size * 0.1 + wingOffset, this.size * 0.6, this.size * 0.4, -0.3, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.ellipse(this.x - this.size * 0.2, this.y + this.size * 0.1 - wingOffset, this.size * 0.6, this.size * 0.4, 0.3, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // Magical mane
-                    const colors = ['#FF69B4', '#87CEEB', '#98FB98', '#DDA0DD'];
-                    colors.forEach((color, i) => {
-                        ctx.fillStyle = color;
-                        ctx.beginPath();
-                        const maneOffset = Math.sin(this.sparklePhase + i) * 3;
-                        ctx.ellipse(this.x + this.size * 0.3, this.y - this.size * 0.3 + maneOffset, this.size * 0.2, this.size * 0.1, 0, 0, Math.PI * 2);
-                        ctx.fill();
-                    });
-                }
-                ctx.restore();
-            }
-        }
-
-        function initializeBackground() {
-            clouds = [];
-            birds = [];
-            magicalCreatures = [];
-
-            // Create initial clouds
-            for (let i = 0; i < 4; i++) {
-                const cloud = new Cloud();
-                cloud.x = Math.random() * canvas.width;
-                clouds.push(cloud);
-            }
-
-            // Create initial birds
-            for (let i = 0; i < 2; i++) { // Fewer regular birds
-                const bird = new Bird();
-                bird.x = Math.random() * canvas.width;
-                birds.push(bird);
-            }
-
-            // Create magical creatures (unicorns)
-            for (let i = 0; i < 1; i++) {
-                const creature = new MagicalCreature('unicorn');
-                creature.x = Math.random() * canvas.width;
-                magicalCreatures.push(creature);
-            }
-        }
-
-        class Particle { /* ... Same Particle class ... */
-            constructor(x, y, color, sizeMultiplier = 1, lifeMultiplier = 1, isFireworkRocket = false) {
-                this.x = x; this.y = y; this.isFireworkRocket = isFireworkRocket;
-                if (this.isFireworkRocket) {
-                    this.vx = (Math.random() - 0.5) * 2; this.vy = -Math.random() * 3 - 4;
-                    this.targetY = canvas.height * (Math.random() * 0.3 + 0.1);
-                    this.color = color || `hsl(${Math.random() * 360}, 100%, 70%)`; this.size = 4 * sizeMultiplier;
-                } else {
-                    this.vx = (Math.random() - 0.5) * 8 * (sizeMultiplier * 0.5);
-                    this.vy = (Math.random() - 0.7) * 8 * (sizeMultiplier * 0.5);
-                    this.color = color || `hsl(${Math.random() * 360}, 100%, 70%)`;
-                    this.size = (Math.random() * 6 + 4) * sizeMultiplier;
-                }
-                this.life = (this.isFireworkRocket ? 120 : 60) * lifeMultiplier; this.initialLife = this.life;
-                this.decay = 0.015 / lifeMultiplier; this.rotation = Math.random() * Math.PI * 2;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.2;
-            }
-            update() {
-                this.x += this.vx; this.y += this.vy;
-                if (!this.isFireworkRocket) { this.vy += 0.2; }
-                this.life -= 1; this.rotation += this.rotationSpeed;
-                if (!this.isFireworkRocket) { this.size *= 0.98; }
-                if (this.isFireworkRocket && this.y <= this.targetY) {
-                    this.life = 0; createStarBurst(this.x, this.y, 50 + Math.random() * 50, this.color, 1.5, 1.5, false);
-                }
-            }
-            draw(ctx) {
-                ctx.save(); ctx.globalAlpha = Math.max(0, this.life / this.initialLife);
-                ctx.translate(this.x, this.y); ctx.rotate(this.rotation); ctx.fillStyle = this.color;
-                if (this.isFireworkRocket) {
-                    ctx.beginPath(); ctx.arc(0,0, this.size/2, 0, Math.PI * 2); ctx.fill();
-                    ctx.globalAlpha *= 0.5; ctx.beginPath(); ctx.arc(0, this.size * 0.8, this.size/3, 0, Math.PI * 2); ctx.fill();
-                } else {
-                    ctx.beginPath();
-                    for (let i = 0; i < 5; i++) {
-                        const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2 + this.rotation;
-                        const x = Math.cos(angle) * this.size; const y = Math.sin(angle) * this.size;
-                        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                        const innerAngle = angle + Math.PI / 5;
-                        const innerX = Math.cos(innerAngle) * (this.size * 0.5); const innerY = Math.sin(innerAngle) * (this.size * 0.5);
-                        ctx.lineTo(innerX, innerY);
-                    }
-                    ctx.closePath(); ctx.fill();
-                }
-                ctx.restore();
-            }
-        }
-        function createStarBurst(x,y,c=20,bc=null,sm=1,lm=1,ir=false){for(let i=0;i<c;i++){particles.push(new Particle(x,y,bc?lightenColor(bc,Math.random()*30):`hsl(${Math.random()*360},100%,70%)`,sm,lm,ir))}}
-
-        function createNoteHitEffect(x, y, color) {
-            // Create enhanced particle effect for correct notes
-            for (let i = 0; i < 25; i++) {
-                const particle = new Particle(x, y, color, 0.8, 1.2);
-                particle.vx = (Math.random() - 0.5) * 12;
-                particle.vy = (Math.random() - 0.8) * 10;
-                particles.push(particle);
-            }
-
-            // Add some sparkling stars
-            for (let i = 0; i < 15; i++) {
-                const sparkle = new Particle(x, y, '#FFD700', 0.6, 1.5);
-                sparkle.vx = (Math.random() - 0.5) * 8;
-                sparkle.vy = (Math.random() - 0.6) * 8;
-                particles.push(sparkle);
-            }
-        }
-        function triggerFireworksShow(){
-            for(let i=0;i<8+Math.floor(Math.random()*5);i++){
-                setTimeout(()=>{
-                    const x = Math.random()*(canvas.width*.8)+(canvas.width*.1);
-                    const rainbowColors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
-                    const color = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
-                    createStarBurst(x, canvas.height, 1, color, 1, 1, true);
-
-                    // Add extra rainbow sparkles for level completion
-                    setTimeout(() => {
-                        for(let j = 0; j < 15; j++) {
-                            const sparkle = new Particle(x, canvas.height * 0.3,
-                                `hsl(${Math.random() * 360}, 100%, 70%)`, 1.2, 2);
-                            sparkle.vx = (Math.random() - 0.5) * 10;
-                            sparkle.vy = (Math.random() - 0.8) * 8;
-                            particles.push(sparkle);
-                        }
-                    }, 200);
-                }, i*(250+Math.random()*150));
-            }
-        }
-
-        let blocks = []; let platforms = []; const keys = {};
-
-        function setCanvasSize() {
-            // Calculate minimum width needed for all blocks
-            const minWidthForBlocks = (8 * 80) + (7 * 40) + 40; // 8 blocks, 7 gaps, plus margins = 960px
-            const aspectRatio = 800 / 600;
-            const availableWidth = Math.max(minWidthForBlocks, window.innerWidth * 0.95);
-            const availableHeight = window.innerHeight * 0.65;
-            let newWidth, newHeight;
-
-            // Prioritize fitting all blocks, then maintain aspect ratio if possible
-            if (availableWidth >= minWidthForBlocks) {
-                if (availableWidth / availableHeight > aspectRatio) {
-                    newHeight = availableHeight;
-                    newWidth = Math.max(minWidthForBlocks, newHeight * aspectRatio);
-                } else {
-                    newWidth = availableWidth;
-                    newHeight = newWidth / aspectRatio;
-                }
-            } else {
-                newWidth = minWidthForBlocks;
-                newHeight = newWidth / aspectRatio;
-            }
-
-            canvas.width = Math.max(minWidthForBlocks, newWidth);
-            canvas.height = Math.max(240, newHeight);
-            player.y = canvas.height - player.height - 50;
-            createLevel(gameState.level > 0 ? gameState.level -1 : 0);
-            initializeBackground();
-            if(gameState.started) draw(); else { draw(); drawStartScreenOverlay(); }
-        }
-        window.addEventListener('resize', setCanvasSize);
-
-        document.addEventListener('keydown',(e)=>{keys[e.key]=true;if(e.key===' ')e.preventDefault();});
-        document.addEventListener('keyup',(e)=>{keys[e.key]=false;});
-        const touchLeftBtn=document.getElementById('touchLeftBtn'),touchRightBtn=document.getElementById('touchRightBtn'),touchJumpBtn=document.getElementById('touchJumpBtn');
-        function handleTouchStart(k){keys[k]=true} function handleTouchEnd(k){keys[k]=false}
-        touchLeftBtn.addEventListener('touchstart',(e)=>{e.preventDefault();handleTouchStart('ArrowLeft')},{passive:false});
-        touchLeftBtn.addEventListener('touchend',(e)=>{e.preventDefault();handleTouchEnd('ArrowLeft')});
-        touchLeftBtn.addEventListener('mousedown',()=>handleTouchStart('ArrowLeft'));touchLeftBtn.addEventListener('mouseup',()=>handleTouchEnd('ArrowLeft'));
-        touchRightBtn.addEventListener('touchstart',(e)=>{e.preventDefault();handleTouchStart('ArrowRight')},{passive:false});
-        touchRightBtn.addEventListener('touchend',(e)=>{e.preventDefault();handleTouchEnd('ArrowRight')});
-        touchRightBtn.addEventListener('mousedown',()=>handleTouchStart('ArrowRight'));touchRightBtn.addEventListener('mouseup',()=>handleTouchEnd('ArrowRight'));
-        touchJumpBtn.addEventListener('touchstart',(e)=>{e.preventDefault();handleTouchStart(' ')},{passive:false});
-        touchJumpBtn.addEventListener('touchend',(e)=>{e.preventDefault();handleTouchEnd(' ')});
-        touchJumpBtn.addEventListener('mousedown',()=>handleTouchStart(' '));touchJumpBtn.addEventListener('mouseup',()=>handleTouchEnd(' '));
-
-        document.getElementById('startBtn').addEventListener('click',startGame);
-        document.getElementById('restartLevelBtn').addEventListener('click',restartLevel);
-        document.getElementById('restartGameBtn').addEventListener('click',restartGame);
-        closeInstructionsBtn.addEventListener('click',hideInstructions);
-
-        const melodyReminderBtn = document.getElementById('melodyReminderBtn');
-        melodyReminderBtn.addEventListener('click', playMelodyReminder);
-
-        function hideInstructions(){clearTimeout(instructionsTimeout);instructionsPanel.classList.add('hidden')}
-        function showInstructions(){instructionsPanel.classList.remove('hidden');clearTimeout(instructionsTimeout);instructionsTimeout=setTimeout(hideInstructions,12000)}
-
-        async function playMelodyReminder() {
-            if (!gameState.started || !gameState.currentSong || gameState.levelComplete) return;
-            if (audioContext.state === 'suspended') await audioContext.resume();
-
-            melodyReminderBtn.disabled = true;
-            // Potentially disable other game interaction buttons here
-
-            const notesToPlay = gameState.noteSequence.slice(gameState.currentNoteIndex);
-
-            for (let i = 0; i < notesToPlay.length; i++) {
-                const noteObj = notesToPlay[i];
-                const noteName = noteObj.note;
-                const durationName = noteObj.duration;
-                let multiplier = durationMultipliers[durationName] || 1;
-                const noteDurationMs = gameState.currentSong.tempo * multiplier;
-
-                playNote(noteName, noteDurationMs * 0.8); // Play note slightly shorter for clarity
-
-                await new Promise(resolve => setTimeout(resolve, noteDurationMs));
-
-                if (!gameState.started) break;
-            }
-
-            melodyReminderBtn.disabled = false;
-            // Re-enable other game interaction buttons if they were disabled
-        }
-
-        function playNote(nk,d=200){if(!notes[nk])return;const o=audioContext.createOscillator(),g=audioContext.createGain();o.connect(g);g.connect(audioContext.destination);o.frequency.value=notes[nk].freq;o.type='sine';g.gain.setValueAtTime(.2,audioContext.currentTime);g.gain.exponentialRampToValueAtTime(.01,audioContext.currentTime+d/1000);o.start(audioContext.currentTime);o.stop(audioContext.currentTime+d/1000)}
-
-        const durationMultipliers = {
-            'sixteenth': 0.25,
-            'eighth': 0.5,
-            'quarter': 1,
-            'dotted_quarter': 1.5,
-            'half': 2,
-            'whole': 4
+        const release = (ev) => {
+          ev.preventDefault();
+          if (!isJump) input[key] = false;
         };
+        el.addEventListener('touchstart', press, { passive: false });
+        el.addEventListener('touchend', release, { passive: false });
+        el.addEventListener('mousedown', press);
+        el.addEventListener('mouseup', release);
+        el.addEventListener('mouseleave', release);
+      };
 
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
+      bindTouch('leftBtn', 'left');
+      bindTouch('rightBtn', 'right');
+      bindTouch('jumpBtn', 'jumpQueued', true);
+    }
+
+    function setupUi() {
+      document.getElementById('startBtn').addEventListener('click', async () => {
+        await audioCtx.resume();
+        if (!state.startedListening) {
+          await playMelody();
         }
+        state.running = true;
+        state.message = 'Go! Follow the melody.';
+        updateStatus();
+      });
 
-        async function playSong(s) {
-            for (let i = 0; i < s.notes.length; i++) {
-                const noteObj = s.notes[i];
+      document.getElementById('hintBtn').addEventListener('click', async () => {
+        await audioCtx.resume();
+        playMelody();
+      });
 
-                // Handle songs that might still use the old string format for notes
-                if (typeof noteObj === 'string') {
-                    playNote(noteObj, s.tempo * 0.8); // Default old behavior
-                    await new Promise(r => setTimeout(r, s.tempo));
-                } else {
-                    const noteName = noteObj.note;
-                    const durationName = noteObj.duration;
+      document.getElementById('restartLevelBtn').addEventListener('click', async () => {
+        await audioCtx.resume();
+        setLevel(state.levelIndex);
+        playMelody();
+      });
 
-                    let multiplier = durationMultipliers[durationName];
-                    if (multiplier === undefined) {
-                        console.warn(`Unknown duration: ${durationName}, defaulting to quarter note (multiplier 1).`);
-                        multiplier = 1;
-                    }
+      document.getElementById('resetRunBtn').addEventListener('click', async () => {
+        await audioCtx.resume();
+        setLevel(0, true);
+        playMelody();
+      });
 
-                    const noteDurationMs = s.tempo * multiplier;
+      const legendHtml = Object.entries(NOTE_BANK)
+        .map(([n, meta]) => `<span style="background:${meta.color}">${n} · ${meta.solfege}</span>`)
+        .join('');
+      legendEl.innerHTML = legendHtml;
+    }
 
-                    playNote(noteName, noteDurationMs);
-                    await new Promise(r => setTimeout(r, noteDurationMs));
-                }
-            }
-        }
+    function init() {
+      bindControls();
+      setupUi();
+      setLevel(0, true);
+      updateStatus();
+      tick();
+    }
 
-        function createLevel(levelIndex) {
-            blocks = []; platforms = [];
-            const groundY = canvas.height - 50;
-            platforms.push({ x: 0, y: groundY, width: canvas.width, height: 50 });
-
-            const blockYPosition = canvas.height - player.height - 180; // Blocks raised higher
-
-            const notePlatformWidth = Math.min(850, canvas.width * 0.95);
-            const notePlatformX = (canvas.width - notePlatformWidth) / 2;
-
-            const allNoteKeys = Object.keys(notes);
-            const blockCount = allNoteKeys.length;
-            const blockWidth = 80; // Fixed width - no longer responsive
-            const totalBlockActualWidth = blockCount * blockWidth;
-            const desiredGap = 40; // Fixed spacing
-            const totalDesiredGapWidth = (blockCount - 1) * desiredGap;
-            const totalRequiredWidth = totalBlockActualWidth + totalDesiredGapWidth;
-
-            let startX; let actualBlockSpacing;
-
-            // Always use fixed spacing - center the blocks if there's extra space
-            actualBlockSpacing = desiredGap;
-            startX = (canvas.width - totalRequiredWidth) / 2;
-
-            // Ensure blocks don't go off screen on very small displays
-            if (startX < 10) {
-                startX = 10;
-            }
-
-            allNoteKeys.forEach((noteKey, index) => {
-                blocks.push({
-                    x: startX + index * (blockWidth + actualBlockSpacing),
-                    y: blockYPosition,
-                    width: blockWidth, height: player.height,
-                    note: noteKey, color: notes[noteKey].color,
-                    hit: false, lastHit: 0
-                });
-            });
-        }
-
-        async function startGame() {
-            shuffleArray(songs);
-            if (audioContext.state === 'suspended') await audioContext.resume();
-            gameState.started = true; gameState.level = 1; gameState.score = 0;
-            gameState.currentSong = songs[0]; gameState.noteSequence = [...gameState.currentSong.notes];
-            gameState.currentNoteIndex = 0; gameState.levelComplete = false; particles.length = 0;
-            setCanvasSize(); updateUI();
-            document.getElementById('songName').textContent = gameState.currentSong.name;
-            await playSong(gameState.currentSong); gameLoop();
-        }
-
-        async function restartLevel() {
-            if(!gameState.started)return;if(audioContext.state==='suspended')await audioContext.resume();
-            gameState.currentNoteIndex=0;gameState.levelComplete=false;gameState.lastCorrectNote=null;particles.length=0;
-            player.x=50;player.y=canvas.height-player.height-50;player.vx=0;player.vy=0;
-            blocks.forEach(b=>b.lastHit=0);updateUI();await playSong(gameState.currentSong);
-        }
-        async function restartGame() {
-            if(audioContext.state==='suspended')await audioContext.resume();
-            gameState={started:false,level:0,score:0,currentSong:null,currentNoteIndex:0,noteSequence:[],levelComplete:false};
-            player.x=50;player.y=canvas.height-player.height-50;player.vx=0;player.vy=0;
-            blocks=[];platforms=[];particles.length=0;updateUI();await startGame();
-        }
-
-        function updateDisplayedNotes() {
-            const notesDisplayElement = document.getElementById('currentSongNotes').querySelector('span');
-            if (!gameState.currentSong || gameState.currentNoteIndex === 0) {
-                // Display "None" or an empty string if no song or no notes played yet
-                notesDisplayElement.innerHTML = (gameState.currentSong && gameState.currentNoteIndex === 0) ? 'None yet' : '-';
-                return;
-            }
-
-            // Get the notes that have been correctly played so far
-            // gameState.currentNoteIndex is the index of the *next* note to be played,
-            // so slice up to this index.
-            const playedNotesSequence = gameState.noteSequence.slice(0, gameState.currentNoteIndex);
-
-            let notesHtml = playedNotesSequence.map(noteObj => noteObj.note).join(' - ');
-
-            if (gameState.levelComplete) {
-                // If level is complete, all notes of the sequence were played.
-                notesHtml = gameState.noteSequence.map(noteObj => noteObj.note).join(' - ') + " - ✔️";
-            } else if (playedNotesSequence.length === 0 && gameState.currentNoteIndex > 0) {
-                // This case should ideally not be hit if currentNoteIndex > 0 means at least one note played.
-                // However, as a fallback or if logic changes, handle it.
-                notesDisplayElement.innerHTML = 'None yet'; // Or keep previous state
-                return;
-            } else if (playedNotesSequence.length === 0 && gameState.currentNoteIndex === 0) {
-                 notesDisplayElement.innerHTML = 'None yet';
-                 return;
-            }
-
-
-            notesDisplayElement.innerHTML = notesHtml;
-        }
-
-        function updateUI(){
-            document.getElementById('score').textContent=gameState.score;document.getElementById('level').textContent=gameState.level;
-            document.getElementById('songName').textContent=gameState.currentSong?gameState.currentSong.name:"-";
-            const p=gameState.currentSong?gameState.currentNoteIndex+'/'+gameState.noteSequence.length:"0/0";
-            document.getElementById('progressText').textContent=p;
-            if(gameState.currentSong&&gameState.currentNoteIndex>=gameState.noteSequence.length){document.getElementById('progressText').textContent='Complete!'}
-            updateDisplayedNotes(); // Add this line
-        }
-
-        function checkCollision(r1,r2){return r1.x<r2.x+r2.width&&r1.x+r1.width>r2.x&&r1.y<r2.y+r2.height&&r1.y+r1.height>r2.y}
-
-        function updatePlayer() {
-            if (!gameState.started || gameState.levelComplete) return;
-            if (keys['ArrowLeft']) { player.vx = -player.speed; player.direction = -1; }
-            else if (keys['ArrowRight']) { player.vx = player.speed; player.direction = 1; }
-            else { player.vx *= 0.9; }
-            if (keys[' '] && player.grounded) { player.vy = player.jumpPower; player.grounded = false; }
-
-            let prevY = player.y;
-            player.vy += 0.5;
-            player.y += player.vy;
-            player.x += player.vx;
-            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-
-            player.grounded = false;
-
-            platforms.forEach(platform => {
-                if (checkCollision(player, platform)) {
-                    if (player.vy >= 0 && prevY + player.height <= platform.y + 1) {
-                        player.y = platform.y - player.height; player.vy = 0; player.grounded = true;
-                    }
-                }
-            });
-
-            blocks.forEach(block => {
-                if (checkCollision(player, block)) {
-                    if (player.vy >= 0 && prevY + player.height <= block.y + 1) { // Landing on block
-                        player.y = block.y - player.height; player.vy = 0; player.grounded = true;
-                        playNote(block.note, 300); block.lastHit = Date.now();
-                        if (gameState.currentNoteIndex < gameState.noteSequence.length && block.note === gameState.noteSequence[gameState.currentNoteIndex].note) {
-                            gameState.score += 100; gameState.currentNoteIndex++;
-                            gameState.lastCorrectNote = block.note; // Track last correct note
-                            createNoteHitEffect(block.x + block.width/2, block.y + block.height/2, block.color);
-                            if (gameState.currentNoteIndex >= gameState.noteSequence.length) { gameState.levelComplete = true; triggerFireworksShow(); setTimeout(nextLevel, 4000); }
-                        } else if (gameState.currentNoteIndex < gameState.noteSequence.length) { gameState.score = Math.max(0, gameState.score - 20); }
-                        updateUI();
-                    }
-                    else if (player.vy < 0 && prevY >= block.y + block.height -1 ) { // Hit from below
-                        player.y = block.y + block.height; player.vy = 2;
-                        playNote(block.note, 300); block.lastHit = Date.now();
-                        if (gameState.currentNoteIndex < gameState.noteSequence.length && block.note === gameState.noteSequence[gameState.currentNoteIndex].note) {
-                            gameState.score += 100; gameState.currentNoteIndex++;
-                            gameState.lastCorrectNote = block.note; // Track last correct note
-                            createNoteHitEffect(block.x + block.width/2, block.y + block.height/2, block.color);
-                            if (gameState.currentNoteIndex >= gameState.noteSequence.length) { gameState.levelComplete = true; triggerFireworksShow(); setTimeout(nextLevel, 4000); }
-                        } else if (gameState.currentNoteIndex < gameState.noteSequence.length) { gameState.score = Math.max(0, gameState.score - 20); }
-                        updateUI();
-                    }
-                    else if (player.vx !== 0) {  // Horizontal collision with block side
-                        if (player.vx > 0 && player.x + player.width > block.x && player.x < block.x) { // Moving right, hit left side
-                            player.x = block.x - player.width; player.vx = 0;
-                        } else if (player.vx < 0 && player.x < block.x + block.width && player.x + player.width > block.x + block.width) { // Moving left, hit right side
-                            player.x = block.x + block.width; player.vx = 0;
-                        }
-                    }
-                }
-            });
-
-            if (player.y > canvas.height + player.height) {
-                player.x = 50; player.y = canvas.height - player.height - 50; player.vx = 0; player.vy = 0;
-            }
-            if (Math.abs(player.vx) > 0.1 || !player.grounded) { player.eyeFrame = (player.eyeFrame + 0.1) % (Math.PI * 2); }
-            else { player.eyeFrame = (player.eyeFrame + 0.02) % (Math.PI * 2); }
-        }
-
-        function handleCanvasClick(event) {
-            if (!gameState.started || gameState.levelComplete) return;
-
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const x = (event.clientX - rect.left) * scaleX;
-            const y = (event.clientY - rect.top) * scaleY;
-
-            blocks.forEach(block => {
-                if (x >= block.x && x <= block.x + block.width &&
-                    y >= block.y && y <= block.y + block.height) {
-
-                    playNote(block.note, 300);
-                    block.lastHit = Date.now(); // For visual feedback in draw()
-
-                    // Check if the hit note is the correct one in sequence
-                    if (gameState.currentNoteIndex < gameState.noteSequence.length &&
-                        block.note === gameState.noteSequence[gameState.currentNoteIndex].note) { // Access .note from the object
-
-                        gameState.score += 100;
-                        gameState.currentNoteIndex++;
-                        gameState.lastCorrectNote = block.note;
-                        createNoteHitEffect(block.x + block.width / 2, block.y + block.height / 2, block.color); // Centered effect
-
-                        if (gameState.currentNoteIndex >= gameState.noteSequence.length) {
-                            gameState.levelComplete = true;
-                            triggerFireworksShow();
-                            setTimeout(nextLevel, 4000);
-                        }
-                    } else if (gameState.currentNoteIndex < gameState.noteSequence.length) {
-                        // Optional: Penalize for wrong tap or just do nothing
-                        gameState.score = Math.max(0, gameState.score - 20); // Example penalty
-                    }
-                    updateUI();
-                    // Consider if draw() needs to be called here for immediate visual feedback on block hit
-                }
-            });
-        }
-
-        async function nextLevel(){if(!gameState.started)return;gameState.level++;gameState.currentSong=songs[(gameState.level-1)%songs.length];gameState.noteSequence=[...gameState.currentSong.notes];gameState.currentNoteIndex=0;gameState.levelComplete=false;gameState.lastCorrectNote=null;particles.length=0;player.x=50;player.y=canvas.height-player.height-50;player.vx=0;player.vy=0;updateUI();document.getElementById('songName').textContent=gameState.currentSong.name;await playSong(gameState.currentSong);if(!gameLoopRequest)gameLoop()}
-
-        function draw() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-
-            // Draw background clouds (parallax effect)
-            clouds.forEach(cloud => cloud.draw(ctx));
-
-            // Draw birds
-            birds.forEach(bird => bird.draw(ctx));
-
-            // Draw magical creatures
-            magicalCreatures.forEach(creature => creature.draw(ctx));
-
-            // Draw static background clouds (keeping original ones)
-            ctx.fillStyle='rgba(255,255,255,0.8)';
-            [[100,100,30],[130,100,35],[160,100,30],[canvas.width-150,80,25],[canvas.width-125,80,30],[canvas.width-100,80,25]].forEach(c=>{ctx.beginPath();ctx.arc(c[0],c[1],c[2],0,Math.PI*2);ctx.fill()});
-            platforms.forEach(p=>{ctx.fillStyle='#8B4513';ctx.fillRect(p.x,p.y,p.width,p.height);if(!p.isVisual){ctx.fillStyle='#228B22';ctx.fillRect(p.x,p.y,p.width,5)}});
-            blocks.forEach(b=>{const ts=Date.now()-b.lastHit,ir=ts<300,s=ir?1+Math.sin(ts*.02)*.05:1,yo=ir?Math.sin(ts*.02)*-3:0;
-            const isLastCorrect=gameState.lastCorrectNote===b.note;ctx.save();ctx.translate(b.x+b.width/2,b.y+b.height/2+yo);ctx.scale(s,s);
-            if(isLastCorrect){ctx.shadowColor='#FFD700';ctx.shadowBlur=15+Math.sin(Date.now()*.008)*5;ctx.strokeStyle='#FFD700';ctx.lineWidth=3;ctx.strokeRect(-b.width/2-2,-b.height/2-2,b.width+4,b.height+4);ctx.shadowBlur=0}
-            ctx.fillStyle='rgba(0,0,0,0.2)';ctx.fillRect(-b.width/2+3,-b.height/2+3,b.width,b.height);const g=ctx.createLinearGradient(-b.width/2,-b.height/2,-b.width/2,b.height/2),bc=b.color;g.addColorStop(0,lightenColor(bc,20));g.addColorStop(.5,bc);g.addColorStop(1,darkenColor(bc,15));ctx.fillStyle=g;ctx.fillRect(-b.width/2,-b.height/2,b.width,b.height);ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(-b.width/2+4,-b.height/2+4,b.width-8,8);ctx.strokeStyle=darkenColor(bc,30);ctx.lineWidth=1.5;ctx.strokeRect(-b.width/2,-b.height/2,b.width,b.height);if(ir){ctx.shadowColor=b.color;ctx.shadowBlur=10+Math.sin(ts*.1)*5;ctx.strokeStyle=lightenColor(b.color,50);ctx.lineWidth=2;ctx.strokeRect(-b.width/2,-b.height/2,b.width,b.height);ctx.shadowBlur=0}
-            const ndn=b.note;ctx.font=`bold ${b.height*.35}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(0,0,0,0.4)';ctx.fillText(ndn,1,1);ctx.fillStyle=(['E','F'].includes(b.note)&&b.color==='#FFFF00')||b.color==='#00FF00'?'#333':'white';ctx.fillText(ndn,0,0);ctx.restore()});
-            ctx.save();ctx.fillStyle=player.color;ctx.fillRect(player.x+5,player.y+10,player.width-10,player.height-15);ctx.fillStyle='#FFDAB9';ctx.beginPath();ctx.arc(player.x+player.width/2,player.y+10,player.width/3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#A0522D';ctx.beginPath();ctx.arc(player.x+player.width/2,player.y+5,player.width/3.5,Math.PI,0);ctx.fill();const ex=player.x+player.width/2+(player.direction*player.width/8),ey=player.y+8,es=player.width/8,ps=es/2;ctx.fillStyle='white';ctx.beginPath();ctx.arc(ex-player.width/6,ey,es,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(ex+player.width/6,ey,es,0,Math.PI*2);ctx.fill();ctx.fillStyle='black';const bf=Math.sin(player.eyeFrame)>.9?.2:1;ctx.beginPath();ctx.arc(ex-player.width/6,ey,ps,0,Math.PI*2*bf);ctx.fill();ctx.beginPath();ctx.arc(ex+player.width/6,ey,ps,0,Math.PI*2*bf);ctx.fill();ctx.strokeStyle='black';ctx.lineWidth=1;ctx.beginPath();const my=player.y+15;if(player.grounded&&Math.abs(player.vx)<.1){ctx.arc(player.x+player.width/2,my,player.width/8,.2*Math.PI,.8*Math.PI)}else{ctx.arc(player.x+player.width/2,my+2,player.width/7,0,Math.PI*2)}
-            ctx.stroke();ctx.fillStyle='#4682B4';const lsw=player.grounded&&Math.abs(player.vx)>.1?Math.sin(Date.now()*.01*player.speed)*player.width/8:0;ctx.fillRect(player.x+player.width/2-player.width/4-2-lsw,player.y+player.height-10,player.width/4,10);ctx.fillRect(player.x+player.width/2+2+lsw,player.y+player.height-10,player.width/4,10);ctx.restore();
-            particles.forEach(p=>p.draw(ctx));
-            if(gameState.levelComplete&&!particles.some(p=>p.isFireworkRocket||p.life>p.initialLife*.8)){ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(canvas.width/2-Math.min(200,canvas.width*.4),canvas.height/2-Math.min(50,canvas.height*.1),Math.min(400,canvas.width*.8),Math.min(100,canvas.height*.2));ctx.fillStyle='white';ctx.font=`bold ${Math.min(canvas.width*.05,36)}px Arial`;ctx.textAlign='center';ctx.fillText('Level Complete!',canvas.width/2,canvas.height/2+(Math.min(canvas.width*.05,36))/3)}
-        }
-
-        let gameLoopRequest;
-        function gameLoop(){if(!gameState.started){cancelAnimationFrame(gameLoopRequest);gameLoopRequest=null;return}updatePlayer();
-
-        // Update background elements
-        clouds.forEach(cloud => cloud.update());
-        birds.forEach(bird => bird.update());
-        magicalCreatures.forEach(creature => creature.update());
-
-        for(let i=particles.length-1;i>=0;i--){particles[i].update();if(particles[i].life<=0||particles[i].size<=.5){particles.splice(i,1)}}draw();gameLoopRequest=requestAnimationFrame(gameLoop)}
-        function drawStartScreenOverlay(){ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(canvas.width*.15,canvas.height*.3,canvas.width*.7,canvas.height*.33);ctx.fillStyle='white';ctx.font=`bold ${canvas.width*.06}px Arial`;ctx.textAlign='center';ctx.fillText('Solfege Hero',canvas.width/2,canvas.height*.45);ctx.font=`${canvas.width*.03}px Arial`;ctx.fillText('Press "Start Game" to begin!',canvas.width/2,canvas.height*.55)}
-        setCanvasSize();showInstructions();
-        canvas.addEventListener('click', handleCanvasClick);
-        function lightenColor(c,p){const n=parseInt(String(c).replace('#',''),16),a=Math.round(2.55*p),R=(n>>16)+a,G=(n>>8&0xFF)+a,B=(n&0xFF)+a;return"#"+(0x1000000+(R<255?R<1?0:R:255)*0x10000+(G<255?G<1?0:G:255)*0x100+(B<255?B<1?0:B:255)).toString(16).slice(1)}
-        function darkenColor(c,p){const n=parseInt(String(c).replace('#',''),16),a=Math.round(2.55*p),R=(n>>16)-a,G=(n>>8&0xFF)-a,B=(n&0xFF)-a;return"#"+(0x1000000+(R>0?R:0)*0x10000+(G>0?G:0)*0x100+(B>0?B:0)).toString(16).slice(1)}
-    </script>
+    init();
+  </script>
 </body>
 </html>
